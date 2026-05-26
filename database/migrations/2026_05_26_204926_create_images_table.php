@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
+            $table->morphs('imageable');
+            $table->string('path');
+            $table->string('alt')->nullable();
+            $table->unsignedInteger('order')->default(0);
             $table->timestamps();
         });
     }

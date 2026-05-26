@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('rsvps', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('meetup_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('email');
             $table->timestamps();
+
+            $table->unique(['meetup_id', 'email']);
         });
     }
 

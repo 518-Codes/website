@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('meetups', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->longText('description');
+            $table->string('location');
+            $table->datetime('starts_at');
+            $table->datetime('ends_at')->nullable();
+            $table->string('status')->default('draft');
             $table->timestamps();
         });
     }
