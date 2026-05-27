@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\MeetupStatus;
 use App\Livewire\EventDetail;
 use App\Livewire\EventsIndex;
 use App\Models\Meetup;
@@ -11,9 +10,9 @@ Route::get('/events', EventsIndex::class);
 Route::get('/events/{slug}', EventDetail::class);
 
 Route::get('/', function () {
-    $meetups = Meetup::with(['tags', 'rsvps'])
-        ->where('status', MeetupStatus::Published)
-        ->where('starts_at', '>=', now())
+    $meetups = Meetup::published()
+        ->upcoming()
+        ->with(['tags', 'rsvps'])
         ->orderBy('starts_at')
         ->get();
 
@@ -21,7 +20,7 @@ Route::get('/', function () {
     $upcomingMeetups = $meetups->skip(1);
 
     $stats = [
-        'events_hosted' => Meetup::where('status', MeetupStatus::Published)->count(),
+        'events_hosted' => Meetup::published()->count(),
         'rsvps_total' => Rsvp::count(),
     ];
 
