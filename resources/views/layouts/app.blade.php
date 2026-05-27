@@ -105,7 +105,7 @@
         .chip-magenta { color: var(--magenta); }
 
         /* Terminal section */
-        .terminal-section { border-top: 2px solid var(--fg); border-bottom: 2px solid var(--fg); }
+        .terminal-section { }
         .term-shell {
             max-width: 1200px; margin: 0 auto;
             background: var(--surface); font-family: var(--font-mono);
@@ -125,7 +125,7 @@
 
         .term-body {
             padding: 20px 24px 0;
-            min-height: 180px; max-height: 400px; overflow-y: auto;
+            min-height: 320px; max-height: 520px; overflow-y: auto;
             display: flex; flex-direction: column; gap: 2px;
             scroll-behavior: smooth;
         }
