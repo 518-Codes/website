@@ -53,7 +53,6 @@
                 placeholder="{{ $rsvpState ? '' : 'type a command…' }}"
                 x-ref="input"
             >
-            <span class="term-cursor" aria-hidden="true"></span>
         </div>
     </div>
 
