@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\MeetupStatus;
 use App\Models\Meetup;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -31,10 +32,16 @@ class EventDetail extends Component
     {
         $this->validate();
 
-        $this->meetup->rsvps()->create([
-            'name' => $this->name,
-            'email' => $this->email,
-        ]);
+        try {
+            $this->meetup->rsvps()->create([
+                'name' => $this->name,
+                'email' => $this->email,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            $this->addError('email', 'This email is already registered for this event.');
+
+            return;
+        }
 
         $this->rsvpd = true;
         $this->meetup->load('rsvps');

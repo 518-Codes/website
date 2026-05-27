@@ -51,3 +51,19 @@ test('rsvp action requires name and email', function () {
         ->call('rsvp')
         ->assertHasErrors(['name' => 'required', 'email' => 'required']);
 });
+
+test('duplicate email rsvp shows a validation error and does not set rsvpd', function () {
+    $meetup = Meetup::factory()->create([
+        'status' => MeetupStatus::Published,
+        'starts_at' => now()->addDays(7),
+    ]);
+
+    Rsvp::factory()->create(['meetup_id' => $meetup->id, 'email' => 'duplicate@example.com']);
+
+    Livewire::test(EventDetail::class, ['slug' => $meetup->slug])
+        ->set('name', 'Someone Else')
+        ->set('email', 'duplicate@example.com')
+        ->call('rsvp')
+        ->assertHasErrors(['email'])
+        ->assertSet('rsvpd', false);
+});
