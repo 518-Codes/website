@@ -125,7 +125,7 @@
 
         .term-body {
             padding: 20px 24px 0;
-            min-height: 320px; max-height: 520px; overflow-y: auto;
+            min-height: 520px; max-height: 800px; overflow-y: auto;
             display: flex; flex-direction: column; gap: 2px;
             scroll-behavior: smooth;
         }
