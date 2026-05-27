@@ -41,4 +41,14 @@ class Meetup extends Model
     {
         return $this->morphMany(Image::class, 'imageable')->orderBy('order');
     }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', MeetupStatus::Published);
+    }
+
+    public function scopeUpcoming(Builder $query): Builder
+    {
+        return $query->where('starts_at', '>=', now());
+    }
 }
