@@ -1,9 +1,12 @@
 <?php
 
 use App\Enums\MeetupStatus;
+use App\Livewire\EventsIndex;
 use App\Models\Meetup;
 use App\Models\Rsvp;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/events', EventsIndex::class);
 
 Route::get('/', function () {
     $meetups = Meetup::with(['tags', 'rsvps'])
