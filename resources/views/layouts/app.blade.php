@@ -115,8 +115,12 @@
         .footer-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hairline); color: var(--fg-mute); font-size: 12px; }
         .footer-status { color: var(--accent); }
 
-        @media (max-width: 640px) {
+        @media (max-width: 900px) {
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
             .nav { padding: 16px 20px; }
+        }
+
+        @media (max-width: 640px) {
             .nav-links { display: none; }
             .footer-grid { grid-template-columns: 1fr; }
         }

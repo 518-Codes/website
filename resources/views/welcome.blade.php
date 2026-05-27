@@ -128,8 +128,6 @@
             .meta-card { display: none; }
             .about-grid { grid-template-columns: 1fr; gap: 32px; }
             .cta-block { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
-            .nav { padding: 16px 20px; }
             .hero { padding: 40px 20px 48px; }
             .section { padding: 48px 20px; }
         }
