@@ -1,16 +1,16 @@
 <div class="term-shell" x-data="terminalShell()" @keydown.window="focusInput">
 
-    <div class="term-titlebar">
+    <div class="term-titlebar" @click="toggle" style="cursor: pointer;" title="click to minimize / restore">
         <div class="term-dots">
             <span class="term-dot term-dot-red"></span>
-            <span class="term-dot term-dot-yellow"></span>
+            <span class="term-dot term-dot-yellow" title="minimize"></span>
             <span class="term-dot term-dot-green"></span>
         </div>
         <div class="term-title">518.codes — bash</div>
-        <div class="term-tag">interactive</div>
+        <div class="term-tag" x-text="minimized ? 'minimized' : 'interactive'"></div>
     </div>
 
-    <div class="term-body" x-ref="body">
+    <div class="term-body" x-ref="body" x-show="!minimized" x-transition:enter="term-expand-enter" x-transition:enter-end="term-expand-enter-end" x-transition:leave="term-expand-leave" x-transition:leave-end="term-expand-leave-end">
         @foreach ($history as $line)
             @if ($line['type'] === 'input')
                 <div class="term-line term-input">{{ $line['text'] }}</div>
@@ -58,10 +58,28 @@
 
 </div>
 
+<style>
+    .term-expand-enter      { overflow: hidden; max-height: 0; opacity: 0; }
+    .term-expand-enter-end  { overflow: hidden; max-height: 800px; opacity: 1; transition: max-height 300ms ease, opacity 200ms ease; }
+    .term-expand-leave      { overflow: hidden; max-height: 800px; opacity: 1; }
+    .term-expand-leave-end  { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 250ms ease, opacity 150ms ease; }
+</style>
+
 <script>
 function terminalShell() {
     return {
+        minimized: false,
+        toggle() {
+            this.minimized = !this.minimized;
+            if (!this.minimized) {
+                this.$nextTick(() => {
+                    this.$refs.body.scrollTop = this.$refs.body.scrollHeight;
+                    this.$refs.input?.focus();
+                });
+            }
+        },
         focusInput(e) {
+            if (this.minimized) return;
             const tag = e.target.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA') return;
             if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -69,6 +87,7 @@ function terminalShell() {
         },
         init() {
             this.$watch('$wire.history', () => {
+                if (this.minimized) return;
                 this.$nextTick(() => {
                     this.$refs.body.scrollTop = this.$refs.body.scrollHeight;
                 });
