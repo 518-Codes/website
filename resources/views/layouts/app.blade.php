@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@yield('title', '518.codes — meetups for people who write code in the 518')</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=VT323&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        :root {
+            --term-bg: #0B0F0B;
+            --term-bg-2: #121812;
+            --term-bg-3: #1A211A;
+            --term-fg: #E6FFE6;
+            --term-fg-dim: #9AB89C;
+            --term-fg-mute: #5A6E5C;
+            --phosphor: #5EFC8D;
+            --phosphor-dim: #2DC964;
+            --amber: #FFB627;
+            --magenta: #FF3DAA;
+            --cyan: #5EE2FC;
+            --rule: #1F2A1F;
+            --rule-2: #2A3A2A;
+            --bg: var(--term-bg);
+            --surface: var(--term-bg-2);
+            --surface-2: var(--term-bg-3);
+            --fg: var(--term-fg);
+            --fg-dim: var(--term-fg-dim);
+            --fg-mute: var(--term-fg-mute);
+            --accent: var(--phosphor);
+            --border: var(--term-fg);
+            --hairline: var(--rule);
+            --shadow-1: 2px 2px 0 0 var(--fg);
+            --shadow-2: 4px 4px 0 0 var(--fg);
+            --shadow-3: 6px 6px 0 0 var(--fg);
+            --shadow-phosphor: 4px 4px 0 0 var(--phosphor);
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+            --font-display: 'VT323', 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+        a:hover { background: var(--accent); color: var(--bg); text-decoration: none; }
+        ::selection { background: var(--accent); color: var(--bg); }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--surface); }
+        ::-webkit-scrollbar-thumb { background: var(--rule-2); border: 2px solid var(--surface); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* Nav */
+        .nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 32px;
+            border-bottom: 2px solid var(--fg);
+            position: sticky; top: 0; background: var(--bg); z-index: 100;
+        }
+        .nav-brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; text-decoration: none; color: inherit; }
+        .nav-brand .dollar { color: var(--accent); margin-right: 4px; }
+        .nav-brand .dot { color: var(--accent); }
+        .nav-links { display: flex; gap: 28px; list-style: none; padding: 0; margin: 0; font-size: 14px; }
+        .nav-links a { color: var(--fg-dim); text-decoration: none; border-bottom: 2px solid transparent; padding-bottom: 2px; }
+        .nav-links a:hover { color: var(--accent); background: transparent; border-bottom-color: var(--accent); }
+        .nav-links a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+            padding: 12px 20px; border: 3px solid var(--fg);
+            cursor: pointer; text-decoration: none;
+            transition: transform 150ms cubic-bezier(.2,.9,.25,1), box-shadow 150ms cubic-bezier(.2,.9,.25,1), background 150ms cubic-bezier(.2,.9,.25,1), color 150ms cubic-bezier(.2,.9,.25,1);
+            letter-spacing: 0.02em;
+        }
+        .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--bg); box-shadow: 6px 6px 0 0 var(--fg); }
+        .btn-primary:hover { transform: translate(6px,6px); box-shadow: none; background: var(--accent); color: var(--bg); }
+        .btn-secondary { background: transparent; color: var(--fg); box-shadow: 6px 6px 0 0 var(--fg); }
+        .btn-secondary:hover { transform: translate(6px,6px); box-shadow: none; background: var(--accent); color: var(--bg); border-color: var(--bg); }
+        .btn-ghost { background: transparent; color: var(--fg); border-color: transparent; box-shadow: none; padding: 12px 6px; }
+        .btn-ghost:hover { background: var(--surface-2); color: var(--fg); }
+        .btn:disabled, .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        /* Kicker */
+        .kicker { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+        .kicker-mute { color: var(--fg-mute); }
+
+        /* Chip */
+        .chip { display: inline-flex; align-items: center; padding: 2px 8px; border: 1.5px solid currentColor; font-size: 11px; letter-spacing: 0.04em; line-height: 1.4; color: var(--fg-dim); }
+        .chip-accent { color: var(--accent); }
+        .chip-amber { color: var(--amber); }
+        .chip-cyan { color: var(--cyan); }
+        .chip-magenta { color: var(--magenta); }
+
+        /* Footer */
+        .footer { border-top: 2px solid var(--fg); padding: 40px 32px 32px; margin-top: 96px; }
+        .footer-rule { color: var(--accent); overflow: hidden; white-space: nowrap; font-family: var(--font-mono); font-size: 13px; line-height: 1; user-select: none; margin-bottom: 32px; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+        .footer-desc { color: var(--fg-dim); font-size: 13px; margin-top: 12px; max-width: 32ch; line-height: 1.5; }
+        .footer-col-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-mute); font-weight: 600; margin-bottom: 10px; }
+        .footer-link { display: block; margin-bottom: 6px; color: var(--fg-dim); text-decoration: none; font-size: 14px; }
+        .footer-link:hover { color: var(--accent); background: transparent; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hairline); color: var(--fg-mute); font-size: 12px; }
+        .footer-status { color: var(--accent); }
+
+        @media (max-width: 640px) {
+            .nav { padding: 16px 20px; }
+            .nav-links { display: none; }
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+
+        @yield('styles')
+    </style>
+    @livewireStyles
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-brand">
+        <span class="dollar">$</span>518<span class="dot">.</span>codes
+    </a>
+    <ul class="nav-links">
+        <li><a href="/events" @class(['active' => request()->is('events*')])>events</a></li>
+        <li><a href="#about">about</a></li>
+        <li><a href="#host">host</a></li>
+    </ul>
+    <a href="#subscribe" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
+        SUBSCRIBE →
+    </a>
+</nav>
+
+@yield('content')
+
+<footer class="footer">
+    <div class="footer-rule" aria-hidden="true">{{ str_repeat('─', 400) }}</div>
+    <div class="footer-grid">
+        <div>
+            <span style="font-weight: 800; font-size: 20px; letter-spacing: -0.02em;">
+                <span style="color: var(--accent); margin-right: 4px;">$</span>518<span style="color: var(--accent);">.</span>codes
+            </span>
+            <p class="footer-desc">A community of software developers in New York's Capital Region. Free, volunteer-run, and always open to first-timers.</p>
+        </div>
+        <div>
+            <div class="footer-col-title">community</div>
+            @foreach(['events' => '/events', 'host an event' => '#host', 'code of conduct' => '#', 'about' => '#about'] as $label => $href)
+                <a href="{{ $href }}" class="footer-link">› {{ $label }}</a>
+            @endforeach
+        </div>
+        <div>
+            <div class="footer-col-title">subscribe</div>
+            @foreach(['weekly digest', 'rss feed', 'ical link', 'discord'] as $link)
+                <a href="#" class="footer-link">› {{ $link }}</a>
+            @endforeach
+        </div>
+        <div>
+            <div class="footer-col-title">region</div>
+            <div style="color: var(--fg-dim); font-size: 13px; line-height: 1.8;">
+                Albany<br>Troy<br>Schenectady<br>Saratoga Springs<br>Hudson Valley
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div>© 518.codes · est. 2024 · made in upstate ny</div>
+        <div><span class="footer-status">● online</span></div>
+    </div>
+</footer>
+
+@livewireScripts
+</body>
+</html>
