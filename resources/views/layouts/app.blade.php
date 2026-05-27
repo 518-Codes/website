@@ -104,6 +104,74 @@
         .chip-cyan { color: var(--cyan); }
         .chip-magenta { color: var(--magenta); }
 
+        /* Terminal section */
+        .terminal-section { border-top: 2px solid var(--fg); }
+        .term-shell {
+            max-width: 1200px; margin: 0 auto;
+            border-left: 2px solid var(--fg); border-right: 2px solid var(--fg);
+            background: var(--surface); font-family: var(--font-mono);
+        }
+        .term-titlebar {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; background: var(--fg); color: var(--bg);
+            font-size: 12px; letter-spacing: 0.08em; user-select: none;
+        }
+        .term-dots { display: flex; gap: 6px; }
+        .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .term-dot-red    { background: #FF5F57; }
+        .term-dot-yellow { background: #FEBC2E; }
+        .term-dot-green  { background: var(--accent); }
+        .term-title { flex: 1; text-align: center; font-weight: 700; }
+        .term-tag { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.6; }
+
+        .term-body {
+            padding: 20px 24px 0;
+            height: 320px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 2px;
+            scroll-behavior: smooth;
+        }
+        .term-body::-webkit-scrollbar { width: 6px; }
+        .term-body::-webkit-scrollbar-track { background: transparent; }
+        .term-body::-webkit-scrollbar-thumb { background: var(--rule-2); }
+
+        .term-line {
+            font-size: 13px; line-height: 1.55; white-space: pre;
+            color: var(--fg-dim); min-height: 1lh;
+        }
+        .term-input  { color: var(--fg); }
+        .term-system { color: var(--fg-mute); font-style: italic; }
+        .term-error  { color: var(--amber); }
+        .term-success{ color: var(--accent); font-weight: 700; }
+        .term-accent { color: var(--accent); font-weight: 800; font-size: 15px; }
+        .term-dim    { color: var(--fg-mute); }
+        .term-prompt { color: var(--phosphor-dim); }
+
+        .term-input-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 16px 0 20px; position: sticky; bottom: 0;
+            background: var(--surface);
+        }
+        .term-ps1 { color: var(--accent); font-weight: 700; font-size: 13px; min-width: 2ch; }
+        .term-input-field {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--fg); font-family: var(--font-mono); font-size: 13px;
+            caret-color: var(--accent);
+        }
+        .term-cursor {
+            display: inline-block; width: 8px; height: 14px;
+            background: var(--accent); vertical-align: middle;
+            animation: blink 1s step-end infinite;
+        }
+        .term-input-field:focus ~ .term-cursor { opacity: 1; }
+        .term-loading .term-input-field { opacity: 0.5; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media (max-width: 640px) {
+            .term-body { height: 260px; padding: 14px 16px 0; }
+            .term-input-row { padding: 12px 0 16px; }
+            .term-line { white-space: pre-wrap; }
+        }
+
         /* Footer */
         .footer { border-top: 2px solid var(--fg); padding: 40px 32px 32px; margin-top: 96px; }
         .footer-rule { color: var(--accent); overflow: hidden; white-space: nowrap; font-family: var(--font-mono); font-size: 13px; line-height: 1; user-select: none; margin-bottom: 32px; }
@@ -147,6 +215,10 @@
 
 {{ $slot ?? '' }}
 @yield('content')
+
+<section class="terminal-section" aria-label="Interactive terminal">
+    @livewire('terminal')
+</section>
 
 <footer class="footer">
     <div class="footer-rule" aria-hidden="true">{{ str_repeat('─', 400) }}</div>
