@@ -26,13 +26,13 @@
         .hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 7fr 5fr; gap: 48px; align-items: end; }
         .hero-display {
             font-weight: 800;
-            font-size: clamp(64px, 12vw, 168px);
-            line-height: 0.86;
+            font-size: clamp(40px, 8vw, 168px);
+            line-height: 0.9;
             letter-spacing: -0.04em;
             margin: 0;
         }
-        .hero-display .l1, .hero-display .l3 { display: block; color: var(--fg); }
-        .hero-display .l2 { display: block; color: var(--accent); }
+        .hero-display .l1, .hero-display .l3 { display: block; color: var(--fg); white-space: nowrap; }
+        .hero-display .l2 { display: block; color: var(--accent); white-space: nowrap; }
         .hero-tag { font-size: 16px; color: var(--fg-dim); margin: 24px 0 0; max-width: 38ch; line-height: 1.5; }
         .hero-cta-row { display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap; }
 
@@ -146,8 +146,8 @@
             <div class="kicker">capital region · est 2024 · volunteer-run</div>
             <h1 class="hero-display" style="margin-top: 24px;">
                 <span class="l1">SHOW UP.</span>
-                <span class="l2">WRITE CODE.</span>
                 <span class="l3">SAY HI.</span>
+                <span class="l2">WRITE CODE.</span>
             </h1>
             <p class="hero-tag">
                 Meetups, demo nights, and study groups for people who write code in the 518.
