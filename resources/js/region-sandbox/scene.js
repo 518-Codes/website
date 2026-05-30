@@ -99,7 +99,7 @@ export function addFeatures(group, heightmap, features) {
       }
       if (ring.length < 3) { areaSkipped++; continue; }
 
-      const contour = ring.map(([nx, nz]) => ({ x: nx, y: nz }));
+      const contour = ring.map(([nx, nz]) => new THREE.Vector2(nx, nz));
       let tris;
       try {
         tris = THREE.ShapeUtils.triangulateShape(contour, []);
