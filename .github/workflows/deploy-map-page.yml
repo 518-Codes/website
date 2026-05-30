@@ -2,7 +2,7 @@ name: Deploy map page to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/region-ascii-sandbox]
   workflow_dispatch:
 
 concurrency:
