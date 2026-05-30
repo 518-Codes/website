@@ -6,6 +6,8 @@ use App\Models\Meetup;
 use App\Models\Rsvp;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/map', fn () => view('region-map'));
+
 Route::get('/events', EventsIndex::class);
 Route::get('/events/{slug}', EventDetail::class);
 
