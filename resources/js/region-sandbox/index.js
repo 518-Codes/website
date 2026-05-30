@@ -37,6 +37,7 @@ export async function mountRegionSandbox(root) {
     const assets = await loadAssets(root.dataset.assets);
     const { scene, group, terrain, key, ambient, dims, stdMaterial, elevMaterial } = createScene(assets.heightmap);
     const { roadMajor, roadSub, waterRiver, waterStream, waterArea } = addFeatures(group, assets.heightmap, assets.features);
+    if (waterStream) { waterStream.visible = false; } // streams hidden by default (declutter)
 
     const labelsEl = root.querySelector('.region-labels');
     const { update: updateLabels, setRelief: setLabelRelief } = createLabels(labelsEl, assets.heightmap, assets.cities);

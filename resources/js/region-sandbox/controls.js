@@ -16,7 +16,7 @@ export function createControls(camera, dom, mapAspect) {
   const state = { azimuth: 0, tilt: 45 * DEG, radius: 1.7 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
-  let orbitSpeed = 0.0015;
+  let orbitSpeed = 0.001;
 
   function apply() {
     const r = state.radius;

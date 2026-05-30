@@ -36,11 +36,11 @@
     .region-labels { position: absolute; inset: 0; pointer-events: none; }
     .region-label {
         position: absolute; transform: translate(-50%, -120%);
-        color: var(--phosphor); font-family: var(--font-mono); font-size: 12px;
+        color: var(--phosphor); font-family: var(--font-mono); font-size: 16px;
         font-weight: 700; letter-spacing: 0.06em; text-shadow: 0 0 6px rgba(94,252,141,0.6);
         white-space: nowrap;
     }
-    .region-label::after { content: '◆'; display: block; text-align: center; font-size: 9px; opacity: 0.8; }
+    .region-label::after { content: '◆'; display: block; text-align: center; font-size: 11px; opacity: 0.8; }
     .region-sandbox[data-unsupported] .region-canvas { display: none; }
     .region-sandbox[data-unsupported] .region-stage { background-image: var(--fallback-img); background-size: cover; filter: grayscale(1) brightness(0.7) sepia(1) hue-rotate(70deg) saturate(3); }
 </style>
