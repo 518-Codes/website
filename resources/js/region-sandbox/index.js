@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createScene, addFeatures } from './scene.js';
 import { createLabels } from './labels.js';
+import { createControls } from './controls.js';
 
 async function loadAssets(base) {
   const [heightmap, features, cities] = await Promise.all([
@@ -26,8 +27,7 @@ export async function mountRegionSandbox(root) {
 
   const aspect = dims.width / dims.height;
   const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100);
-  camera.position.set(0, 1.2, 2.4);
-  camera.lookAt(0, 0, 0);
+  const updateControls = createControls(camera, canvas, dims.height / dims.width);
 
   const resize = () => {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -42,6 +42,7 @@ export async function mountRegionSandbox(root) {
   let raf = 0;
   const tick = () => {
     raf = requestAnimationFrame(tick);
+    updateControls();
     updateLabels(camera, canvas.clientWidth, canvas.clientHeight);
     renderer.render(scene, camera);
   };
