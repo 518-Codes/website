@@ -1,6 +1,6 @@
 import type { BBox } from './config';
 
-export type FeatureKind = 'road-major' | 'road-sub' | 'water-line' | 'water-area';
+export type FeatureKind = 'road-major' | 'road-sub' | 'water-river' | 'water-stream' | 'water-area';
 export type RawFeature = { kind: FeatureKind; coords: [number, number][]; closed?: boolean };
 
 /** Overpass QL for major/sub roads + waterways/water areas in a bbox. */
@@ -36,7 +36,8 @@ export function parseElements(json: { elements?: any[] }): RawFeature[] {
     } else if (tags.natural === 'water') {
       out.push({ kind: 'water-area', coords, closed: true });
     } else if (tags.waterway) {
-      out.push({ kind: 'water-line', coords });
+      const wk = (tags.waterway === 'river' || tags.waterway === 'canal') ? 'water-river' : 'water-stream';
+      out.push({ kind: wk, coords });
     }
   }
   return out;

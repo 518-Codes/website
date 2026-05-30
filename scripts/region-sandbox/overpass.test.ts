@@ -84,14 +84,36 @@ test('parseElements classifies secondary_link as road-sub', () => {
   expect(out[0].kind).toBe('road-sub');
 });
 
-test('parseElements classifies river as water-line', () => {
+test('parseElements classifies river as water-river', () => {
   const json = {
     elements: [
       { type: 'way', tags: { waterway: 'river' }, geometry: [{ lon: -73.6, lat: 42.7 }, { lon: -73.6, lat: 42.8 }] },
     ],
   };
   const out = parseElements(json);
-  expect(out[0].kind).toBe('water-line');
+  expect(out[0].kind).toBe('water-river');
+  expect(out[0].closed).toBeUndefined();
+});
+
+test('parseElements classifies canal as water-river', () => {
+  const json = {
+    elements: [
+      { type: 'way', tags: { waterway: 'canal' }, geometry: [{ lon: -73.6, lat: 42.7 }, { lon: -73.6, lat: 42.8 }] },
+    ],
+  };
+  const out = parseElements(json);
+  expect(out[0].kind).toBe('water-river');
+  expect(out[0].closed).toBeUndefined();
+});
+
+test('parseElements classifies stream as water-stream', () => {
+  const json = {
+    elements: [
+      { type: 'way', tags: { waterway: 'stream' }, geometry: [{ lon: -73.6, lat: 42.7 }, { lon: -73.6, lat: 42.8 }] },
+    ],
+  };
+  const out = parseElements(json);
+  expect(out[0].kind).toBe('water-stream');
   expect(out[0].closed).toBeUndefined();
 });
 
