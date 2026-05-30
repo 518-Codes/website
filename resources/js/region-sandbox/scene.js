@@ -23,7 +23,7 @@ export function createScene(heightmap) {
   const elevMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uRelief: { value: RELIEF },
-      uBands: { value: 8.0 },
+      uBands: { value: 12.0 },
       uGreen: { value: new THREE.Color(0x5efc8d) },
     },
     vertexShader: `
@@ -39,7 +39,8 @@ export function createScene(heightmap) {
       uniform vec3 uGreen;
       void main(){
         float nh = clamp(vH / uRelief, 0.0, 1.0);
-        float band = floor(nh * uBands) / (uBands - 1.0);
+        float t = pow(nh, 0.5);                          // expand low elevations -> finer banding down low
+        float band = floor(t * uBands) / (uBands - 1.0);
         gl_FragColor = vec4(uGreen * band * 0.8, 1.0);
       }`,
   });
