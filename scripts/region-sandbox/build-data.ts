@@ -49,7 +49,7 @@ async function buildFeatures() {
       const p = projectToScene(lng, lat, BBOX);
       return [Math.round(p.x * 1e4) / 1e4, Math.round(p.z * 1e4) / 1e4];
     });
-    const epsilon = f.kind === 'water-area' ? 0.0008 : 0.002;
+    const epsilon = f.kind === 'water-area' ? 0.0002 : 0.002;
     const coords = simplify(pts, epsilon);
     const feature: { kind: typeof f.kind; coords: Pt[]; closed?: boolean } = { kind: f.kind, coords };
     if (f.closed) { feature.closed = true; }
