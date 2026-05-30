@@ -35,17 +35,17 @@ export async function mountRegionSandbox(root) {
 
   try {
     const assets = await loadAssets(root.dataset.assets);
-    const { scene, dims } = createScene(assets.heightmap);
-    addFeatures(scene, assets.heightmap, assets.features);
+    const { scene, group, terrain, key, ambient, dims } = createScene(assets.heightmap);
+    const { roadLines, waterLines } = addFeatures(group, assets.heightmap, assets.features);
 
     const labelsEl = root.querySelector('.region-labels');
-    const updateLabels = createLabels(labelsEl, assets.heightmap, assets.cities);
+    const { update: updateLabels, setRelief: setLabelRelief } = createLabels(labelsEl, assets.heightmap, assets.cities);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
     const aspect = dims.width / dims.height;
     const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100);
-    const updateControls = createControls(camera, canvas, dims.height / dims.width);
+    const { update: updateControls, setRadius, setTilt, setOrbitSpeed, getValues: getControlValues } = createControls(camera, canvas, dims.height / dims.width);
     const ascii = createAsciiPass(renderer, scene, camera);
 
     const resize = () => {
@@ -75,6 +75,40 @@ export async function mountRegionSandbox(root) {
       else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0; }
     }, { threshold: 0 });
     vis.observe(root);
+
+    const api = {
+      setRelief(v) { group.scale.y = v / 0.35; setLabelRelief(v); },
+      setGlow: ascii.setGlow,
+      setCell: ascii.setCell,
+      setLight(v) { key.intensity = v; ambient.intensity = v * 0.156; },
+      setRadius,
+      setTilt,
+      setOrbitSpeed,
+      setMono: ascii.setMono,
+      setLayer(name, on) {
+        if (name === 'terrain') { terrain.visible = on; }
+        if (name === 'roads' && roadLines) { roadLines.visible = on; }
+        if (name === 'water' && waterLines) { waterLines.visible = on; }
+      },
+      getValues() {
+        const a = ascii.getValues();
+        const c = getControlValues();
+        return {
+          relief: group.scale.y * 0.35,
+          glow: a.glow,
+          cell: a.cell,
+          light: key.intensity,
+          radius: c.radius,
+          tilt: c.tiltDeg,
+          orbitSpeed: c.orbitSpeed,
+          mono: a.mono,
+          roads: roadLines ? roadLines.visible : false,
+          water: waterLines ? waterLines.visible : false,
+          terrain: terrain.visible,
+        };
+      },
+    };
+    return api;
   } catch (err) {
     console.error('[region-sandbox] init failed', err);
     showFallback(root);

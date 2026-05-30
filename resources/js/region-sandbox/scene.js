@@ -20,15 +20,19 @@ export function createScene(heightmap) {
 
   const mat = new THREE.MeshStandardMaterial({ color: 0x2a3a2a, flatShading: false, metalness: 0, roughness: 1 });
   const terrain = new THREE.Mesh(geo, mat);
-  scene.add(terrain);
+  // Terrain + features live in a group so relief can be tuned via group.scale.y.
+  const group = new THREE.Group();
+  group.add(terrain);
+  scene.add(group);
 
   // Lighting tuned so elevation reads as luminance (the ASCII pass keys off brightness).
   const key = new THREE.DirectionalLight(0xffffff, 1.6);
   key.position.set(-1.5, 2, 1);
   scene.add(key);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+  scene.add(ambient);
 
-  return { scene, terrain, dims: { width, height } };
+  return { scene, group, terrain, key, ambient, dims: { width, height } };
 }
 
 /** Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1]. */
@@ -44,7 +48,7 @@ export function sampleHeight(heightmap, nx, nz) {
  * into one LineSegments and ALL water into another (2 draw calls total) rather
  * than one Line per feature.
  */
-export function addFeatures(scene, heightmap, features) {
+export function addFeatures(group, heightmap, features) {
   const aspect = heightmap.height / heightmap.width;
   const roadVerts = [];
   const waterVerts = [];
@@ -62,12 +66,15 @@ export function addFeatures(scene, heightmap, features) {
   }
 
   const addBatch = (verts, color) => {
-    if (verts.length === 0) return;
+    if (verts.length === 0) return undefined;
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-    scene.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color })));
+    const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color }));
+    group.add(lines);
+    return lines;
   };
 
-  addBatch(roadVerts, 0xbfffd0);  // brighter => denser glyphs in the ASCII pass
-  addBatch(waterVerts, 0x8fe0ff);
+  const roadLines = addBatch(roadVerts, 0xbfffd0);  // brighter => denser glyphs in the ASCII pass
+  const waterLines = addBatch(waterVerts, 0x8fe0ff);
+  return { roadLines, waterLines };
 }

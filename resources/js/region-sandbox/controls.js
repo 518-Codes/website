@@ -16,6 +16,7 @@ export function createControls(camera, dom, mapAspect) {
   const state = { azimuth: 0, tilt: 45 * DEG, radius: 1.7 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
+  let orbitSpeed = 0.0015;
 
   function apply() {
     const r = state.radius;
@@ -70,10 +71,21 @@ export function createControls(camera, dom, mapAspect) {
     touches = [...e.touches];
   }, { passive: false });
 
-  return function updateControls() {
+  const update = function updateControls() {
     if (!reduceMotion && performance.now() - lastInteract > 2500) {
-      state.azimuth += 0.0015; // slow auto-orbit
+      state.azimuth += orbitSpeed; // slow auto-orbit
     }
     apply();
   };
+
+  // Tuning setters use a widened clamp (5..80°) so a slider has room; pointer
+  // drag keeps the original TILT_MIN/TILT_MAX (15..45°) clamp.
+  const TUNE_TILT_MIN = 5 * DEG;
+  const TUNE_TILT_MAX = 80 * DEG;
+  const setRadius = (v) => { state.radius = v; };
+  const setTilt = (deg) => { state.tilt = Math.min(TUNE_TILT_MAX, Math.max(TUNE_TILT_MIN, deg * DEG)); };
+  const setOrbitSpeed = (v) => { orbitSpeed = v; };
+  const getValues = () => ({ radius: state.radius, tiltDeg: state.tilt / DEG, orbitSpeed });
+
+  return { update, setRadius, setTilt, setOrbitSpeed, getValues };
 }
