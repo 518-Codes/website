@@ -154,7 +154,7 @@ export function addFeatures(group, heightmap, features) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(areaPositions, 3));
     geo.setIndex(areaIndices);
-    waterArea = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x33ccff, side: THREE.DoubleSide }));
+    waterArea = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x9af2ff, side: THREE.DoubleSide }));
     group.add(waterArea);
   }
 
