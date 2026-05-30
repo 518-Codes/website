@@ -11,5 +11,12 @@ test('homepage renders the region sandbox panel shell', function () {
         ->assertSee('capital-region.map')
         ->assertSee('region-canvas', false)
         ->assertSee('region-stage', false)
-        ->assertSee('region-map.png', false);
+        ->assertSee('region-sandbox/fallback.jpg', false);
+});
+
+test('region sandbox static assets are servable', function () {
+    expect(public_path('region-sandbox/heightmap.json'))->toBeReadableFile()
+        ->and(public_path('region-sandbox/features.json'))->toBeReadableFile()
+        ->and(public_path('region-sandbox/cities.json'))->toBeReadableFile()
+        ->and(public_path('region-sandbox/fallback.jpg'))->toBeReadableFile();
 });

@@ -9,7 +9,7 @@
             class="term-shell region-sandbox"
             data-region-sandbox
             data-assets="{{ asset('region-sandbox') }}"
-            data-fallback="{{ asset('region-map.png') }}"
+            data-fallback="{{ asset('region-sandbox/fallback.jpg') }}"
         >
             <div class="term-titlebar">
                 <div class="term-dots">
@@ -23,7 +23,7 @@
             <div class="region-stage">
                 <canvas class="region-canvas" aria-label="3D ASCII map of the Capital Region"></canvas>
                 <div class="region-labels" aria-hidden="true"></div>
-                <noscript><img src="{{ asset('region-map.png') }}" alt="Map of the Capital Region" style="width:100%;display:block"></noscript>
+                <noscript><img src="{{ asset('region-sandbox/fallback.jpg') }}" alt="Map of the Capital Region" style="width:100%;display:block"></noscript>
             </div>
         </div>
     </div>
