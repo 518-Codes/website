@@ -34,6 +34,11 @@ export function parseElements(json: { elements?: any[] }): RawFeature[] {
 export async function fetchOverpass(bbox: BBox): Promise<RawFeature[]> {
   const res = await fetch('https://overpass-api.de/api/interpreter', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'User-Agent': '518codes-region-sandbox/1.0',
+    },
     body: 'data=' + encodeURIComponent(buildQuery(bbox)),
   });
   if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
