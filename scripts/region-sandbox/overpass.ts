@@ -1,31 +1,43 @@
 import type { BBox } from './config';
 
-export type FeatureKind = 'road' | 'water';
-export type RawFeature = { kind: FeatureKind; coords: [number, number][] };
+export type FeatureKind = 'road-major' | 'road-sub' | 'water-line' | 'water-area';
+export type RawFeature = { kind: FeatureKind; coords: [number, number][]; closed?: boolean };
 
-/** Overpass QL for major roads + waterways/water in a bbox. */
+/** Overpass QL for major/sub roads + waterways/water areas in a bbox. */
 export function buildQuery(bbox: BBox): string {
   const bb = `${bbox.minLat},${bbox.minLng},${bbox.maxLat},${bbox.maxLng}`; // s,w,n,e
   return `[out:json][timeout:60];
 (
-  way["highway"~"motorway|trunk|primary"](${bb});
-  way["waterway"~"river|canal"](${bb});
+  way["highway"~"motorway|trunk|primary|secondary"](${bb});
+  way["waterway"~"river|canal|stream"](${bb});
   way["natural"="water"](${bb});
 );
 out geom;`;
 }
 
+const ROAD_MAJOR = new Set(['motorway', 'trunk', 'motorway_link', 'trunk_link']);
+const ROAD_SUB = new Set(['primary', 'secondary', 'primary_link', 'secondary_link']);
+
 /** Classify + extract way geometries; ignore non-way / untagged elements. */
 export function parseElements(json: { elements?: any[] }): RawFeature[] {
   const out: RawFeature[] = [];
   for (const el of json.elements ?? []) {
-    if (el.type !== 'way' || !Array.isArray(el.geometry) || el.geometry.length < 2) continue;
+    if (el.type !== 'way' || !Array.isArray(el.geometry) || el.geometry.length < 2) { continue; }
     const tags = el.tags ?? {};
-    let kind: FeatureKind | null = null;
-    if (tags.highway) kind = 'road';
-    else if (tags.waterway || tags.natural === 'water') kind = 'water';
-    if (!kind) continue;
-    out.push({ kind, coords: el.geometry.map((g: any) => [g.lon, g.lat]) });
+    const coords: [number, number][] = el.geometry.map((g: any) => [g.lon, g.lat]);
+
+    if (tags.highway) {
+      if (ROAD_MAJOR.has(tags.highway)) {
+        out.push({ kind: 'road-major', coords });
+      } else if (ROAD_SUB.has(tags.highway)) {
+        out.push({ kind: 'road-sub', coords });
+      }
+      // other highway values are skipped
+    } else if (tags.natural === 'water') {
+      out.push({ kind: 'water-area', coords, closed: true });
+    } else if (tags.waterway) {
+      out.push({ kind: 'water-line', coords });
+    }
   }
   return out;
 }
