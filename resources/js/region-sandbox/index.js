@@ -37,7 +37,7 @@ export async function mountRegionSandbox(root) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    ascii.resize(canvas.clientWidth, canvas.clientHeight);
+    ascii.resize(w, h);
   };
   resize();
   window.addEventListener('resize', resize);

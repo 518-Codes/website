@@ -57,7 +57,7 @@ export function createAsciiPass(renderer, scene, camera) {
         float l = lum(texture2D(uScene, cellCenterUv).rgb);
         float gi = floor(clamp(l, 0.0, 0.999) * uCount);     // glyph index
         vec2 local = (px - cellOrigin) / uCell;               // 0..1 within cell
-        vec2 atlasUv = vec2((gi + local.x) / uCount, local.y);
+        vec2 atlasUv = vec2((gi + local.x) / uCount, 1.0 - local.y);
         float glyph = texture2D(uAtlas, atlasUv).r;
         vec3 col = uPhosphor * glyph * (1.0 + uGlow);
         gl_FragColor = vec4(col, 1.0);
