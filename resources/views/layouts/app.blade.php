@@ -194,6 +194,7 @@
 
         @yield('styles')
     </style>
+    @stack('styles')
     @livewireStyles
 </head>
 <body>
@@ -236,19 +237,19 @@
         </div>
         <div>
             <div class="footer-col-title">subscribe</div>
-            @foreach(['weekly digest', 'rss feed', 'ical link', 'discord'] as $link)
-                <a href="#" class="footer-link">› {{ $link }}</a>
+            @foreach(['weekly digest' => '#', 'rss feed' => '#', 'ical link' => '#', 'discord' => 'https://discord.gg/U57hDJv5r'] as $label => $href)
+                <a href="{{ $href }}" class="footer-link">› {{ $label }}</a>
             @endforeach
         </div>
         <div>
             <div class="footer-col-title">region</div>
             <div style="color: var(--fg-dim); font-size: 13px; line-height: 1.8;">
-                Albany<br>Troy<br>Schenectady<br>Saratoga Springs<br>Hudson Valley
+                @foreach(config('cities') as $city){{ $city }}@if(!$loop->last)<br>@endif @endforeach
             </div>
         </div>
     </div>
     <div class="footer-bottom">
-        <div>© 518.codes · est. 2024 · made in upstate ny</div>
+        <div>© 518.codes · est. 2026 · made in upstate ny</div>
         <div><span class="footer-status">● online</span></div>
     </div>
 </footer>

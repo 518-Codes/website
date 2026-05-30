@@ -37,6 +37,7 @@
         .hero-cta-row { display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap; }
 
         .meta-card {
+            min-width: 400px;
             border: 4px solid var(--fg);
             box-shadow: 8px 8px 0 0 var(--accent);
             padding: 24px;
@@ -143,7 +144,7 @@
     <div class="scanlines" aria-hidden="true"></div>
     <div class="hero-inner" style="position: relative;">
         <div>
-            <div class="kicker">capital region · est 2024 · volunteer-run</div>
+            <div class="kicker">capital region · est 2026 · volunteer-run</div>
             <h1 class="hero-display" style="margin-top: 24px;">
                 <span class="l1">SHOW UP.</span>
                 <span class="l3">SAY HI.</span>
@@ -173,7 +174,7 @@
                 @else
                     <div class="row"><span>next event</span><b>TBA</b></div>
                 @endif
-                <div class="row"><span>cities</span><b>12</b></div>
+                <div class="row"><span>cities</span><b>{{ count(config('cities')) }}</b></div>
                 <div class="row"><span>people coming</span><b>{{ $stats['rsvps_total'] }}</b></div>
                 <div class="row"><span>cost to show up</span><b>$0</b></div>
             </div>
@@ -282,7 +283,7 @@
         </div>
         @elseif(!$nextMeetup)
         <div class="empty">
-            <div class="kicker" style="margin-bottom: 12px;">›</div>
+            <h2><span style="color: var(--accent);">›</span> events</h2>
             Nothing on the calendar yet. Want to kick things off?
             <code>→ <a href="#host">submit an event</a></code>
         </div>
@@ -295,7 +296,7 @@
     <div class="section">
         <div class="section-head">
             <h2><span style="color: var(--accent);">›</span> about</h2>
-            <div class="meta-label">est. 2024 · 0 sponsors</div>
+            <div class="meta-label">est. 2026 · 0 sponsors</div>
         </div>
         <div class="about-grid">
             <div>
@@ -339,6 +340,8 @@
         </div>
     </div>
 </div>
+
+@include('partials.region-sandbox')
 
 {{-- Host CTA --}}
 <div class="section-wrap" id="host">
