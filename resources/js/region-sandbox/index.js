@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createScene, addFeatures } from './scene.js';
+import { createLabels } from './labels.js';
 
 async function loadAssets(base) {
   const [heightmap, features, cities] = await Promise.all([
@@ -17,6 +18,9 @@ export async function mountRegionSandbox(root) {
   const assets = await loadAssets(root.dataset.assets);
   const { scene, dims } = createScene(assets.heightmap);
   addFeatures(scene, assets.heightmap, assets.features);
+
+  const labelsEl = root.querySelector('.region-labels');
+  const updateLabels = createLabels(labelsEl, assets.heightmap, assets.cities);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
@@ -36,7 +40,11 @@ export async function mountRegionSandbox(root) {
   window.addEventListener('resize', resize);
 
   let raf = 0;
-  const tick = () => { raf = requestAnimationFrame(tick); renderer.render(scene, camera); };
+  const tick = () => {
+    raf = requestAnimationFrame(tick);
+    updateLabels(camera, canvas.clientWidth, canvas.clientHeight);
+    renderer.render(scene, camera);
+  };
   tick();
 
   // teardown on visibility loss
