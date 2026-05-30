@@ -41,7 +41,7 @@ export function createAsciiPass(renderer, scene, camera) {
       uCount: { value: count },
       uPhosphor: { value: new THREE.Color(0x5efc8d) },
       uGlow: { value: 0.25 },
-      uMono: { value: 1.0 },
+      uMono: { value: 0.0 },
       uElevation: { value: 0.0 },
     },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
