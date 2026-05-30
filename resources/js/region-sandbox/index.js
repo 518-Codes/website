@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createScene, addFeatures } from './scene.js';
 import { createLabels } from './labels.js';
 import { createControls } from './controls.js';
+import { createAsciiPass } from './ascii-pass.js';
 
 async function loadAssets(base) {
   const [heightmap, features, cities] = await Promise.all([
@@ -28,6 +29,7 @@ export async function mountRegionSandbox(root) {
   const aspect = dims.width / dims.height;
   const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100);
   const updateControls = createControls(camera, canvas, dims.height / dims.width);
+  const ascii = createAsciiPass(renderer, scene, camera);
 
   const resize = () => {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -35,6 +37,7 @@ export async function mountRegionSandbox(root) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    ascii.resize(canvas.clientWidth, canvas.clientHeight);
   };
   resize();
   window.addEventListener('resize', resize);
@@ -44,7 +47,7 @@ export async function mountRegionSandbox(root) {
     raf = requestAnimationFrame(tick);
     updateControls();
     updateLabels(camera, canvas.clientWidth, canvas.clientHeight);
-    renderer.render(scene, camera);
+    ascii.render();
   };
   tick();
 
