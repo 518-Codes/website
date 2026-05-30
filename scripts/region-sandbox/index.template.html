@@ -433,19 +433,45 @@
                 <input type="checkbox" id="ctl-elevation">
                 <span class="ctl-check-label">elevation banding</span>
             </label>
+
+            <div class="ctl-row" style="margin-top:10px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-bandCount">elevation bands</label>
+                    <span class="ctl-val" id="val-bandCount">—</span>
+                </div>
+                <input type="range" id="ctl-bandCount" min="2" max="24" step="1">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-bandCurve">band curve (lower = more low detail)</label>
+                    <span class="ctl-val" id="val-bandCurve">—</span>
+                </div>
+                <input type="range" id="ctl-bandCurve" min="0.3" max="1.5" step="0.05">
+            </div>
         </div>
 
         <div class="panel-section">
             <div class="panel-section-title">layers</div>
 
             <label class="ctl-check-row">
-                <input type="checkbox" id="ctl-layer-roads">
-                <span class="ctl-check-label">roads</span>
+                <input type="checkbox" id="ctl-layer-road-major">
+                <span class="ctl-check-label">major highways</span>
             </label>
 
             <label class="ctl-check-row">
-                <input type="checkbox" id="ctl-layer-water">
-                <span class="ctl-check-label">water</span>
+                <input type="checkbox" id="ctl-layer-road-sub">
+                <span class="ctl-check-label">sub highways</span>
+            </label>
+
+            <label class="ctl-check-row">
+                <input type="checkbox" id="ctl-layer-water-line">
+                <span class="ctl-check-label">rivers / streams</span>
+            </label>
+
+            <label class="ctl-check-row">
+                <input type="checkbox" id="ctl-layer-water-area">
+                <span class="ctl-check-label">lakes / ponds</span>
             </label>
 
             <label class="ctl-check-row">

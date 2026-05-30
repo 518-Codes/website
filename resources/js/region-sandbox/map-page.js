@@ -8,12 +8,14 @@ const SLIDERS = [
   ['radius', 'setRadius'],
   ['tilt', 'setTilt'],
   ['orbitSpeed', 'setOrbitSpeed'],
+  ['bandCount', 'setBandCount'],
+  ['bandCurve', 'setBandCurve'],
 ];
 const TOGGLES = [
   ['mono', 'setMono'],
   ['elevation', 'setElevation'],
 ];
-const LAYERS = ['roads', 'water', 'terrain'];
+const LAYERS = ['road-major', 'road-sub', 'water-line', 'water-area', 'terrain'];
 
 /** Mounts the sandbox on the /map page and wires the control panel to its API. */
 export async function mountMapPage(root) {
