@@ -36,7 +36,7 @@ export async function mountRegionSandbox(root) {
   try {
     const assets = await loadAssets(root.dataset.assets);
     const { scene, group, terrain, key, ambient, dims, stdMaterial, elevMaterial } = createScene(assets.heightmap);
-    const { roadMajor, roadSub, waterLine, waterArea } = addFeatures(group, assets.heightmap, assets.features);
+    const { roadMajor, roadSub, waterRiver, waterStream, waterArea } = addFeatures(group, assets.heightmap, assets.features);
 
     const labelsEl = root.querySelector('.region-labels');
     const { update: updateLabels, setRelief: setLabelRelief } = createLabels(labelsEl, assets.heightmap, assets.cities);
@@ -95,7 +95,8 @@ export async function mountRegionSandbox(root) {
         if (name === 'terrain') { terrain.visible = on; }
         if (name === 'road-major' && roadMajor) { roadMajor.visible = on; }
         if (name === 'road-sub' && roadSub) { roadSub.visible = on; }
-        if (name === 'water-line' && waterLine) { waterLine.visible = on; }
+        if (name === 'water-river' && waterRiver) { waterRiver.visible = on; }
+        if (name === 'water-stream' && waterStream) { waterStream.visible = on; }
         if (name === 'water-area' && waterArea) { waterArea.visible = on; }
       },
       getValues() {
@@ -115,7 +116,8 @@ export async function mountRegionSandbox(root) {
           bandCurve: elevMaterial.uniforms.uCurve.value,
           'road-major': roadMajor ? roadMajor.visible : false,
           'road-sub': roadSub ? roadSub.visible : false,
-          'water-line': waterLine ? waterLine.visible : false,
+          'water-river': waterRiver ? waterRiver.visible : false,
+          'water-stream': waterStream ? waterStream.visible : false,
           'water-area': waterArea ? waterArea.visible : false,
           terrain: terrain.visible,
         };

@@ -71,15 +71,15 @@ export function sampleHeight(heightmap, nx, nz) {
 
 /**
  * Adds tiered road + water features draped just above the terrain. Lines
- * (road-major, road-sub, water-line) are each batched into a single
+ * (road-major, road-sub, water-river, water-stream) are each batched into a single
  * LineSegments. Water areas (closed polygon rings) are triangulated and merged
- * into a single filled Mesh. ~4-5 draw calls total regardless of feature count.
+ * into a single filled Mesh. ~5-6 draw calls total regardless of feature count.
  *
- * @returns {{ roadMajor?: THREE.LineSegments, roadSub?: THREE.LineSegments, waterLine?: THREE.LineSegments, waterArea?: THREE.Mesh }}
+ * @returns {{ roadMajor?: THREE.LineSegments, roadSub?: THREE.LineSegments, waterRiver?: THREE.LineSegments, waterStream?: THREE.LineSegments, waterArea?: THREE.Mesh }}
  */
 export function addFeatures(group, heightmap, features) {
   const aspect = heightmap.height / heightmap.width;
-  const lineVerts = { 'road-major': [], 'road-sub': [], 'water-line': [] };
+  const lineVerts = { 'road-major': [], 'road-sub': [], 'water-river': [], 'water-stream': [] };
 
   // Merged water-area fill geometry.
   const areaPositions = [];
@@ -144,9 +144,10 @@ export function addFeatures(group, heightmap, features) {
     return lines;
   };
 
-  const roadMajor = addLineBatch(lineVerts['road-major'], 0xd8ffe0); // brightest => dominant glyphs
-  const roadSub = addLineBatch(lineVerts['road-sub'], 0x9fe8b5);     // dimmer green
-  const waterLine = addLineBatch(lineVerts['water-line'], 0x8fe0ff); // blue
+  const roadMajor = addLineBatch(lineVerts['road-major'], 0xd8ffe0);    // brightest => dominant glyphs
+  const roadSub = addLineBatch(lineVerts['road-sub'], 0x9fe8b5);        // dimmer green
+  const waterRiver = addLineBatch(lineVerts['water-river'], 0xbfeeff);  // bright blue, prominent
+  const waterStream = addLineBatch(lineVerts['water-stream'], 0x4f93b0); // dim/muted blue, recedes
 
   let waterArea;
   if (areaIndices.length > 0) {
@@ -161,5 +162,5 @@ export function addFeatures(group, heightmap, features) {
     console.warn(`[region-sandbox] skipped ${areaSkipped} water-area ring(s) (triangulation failed or < 3 points)`);
   }
 
-  return { roadMajor, roadSub, waterLine, waterArea };
+  return { roadMajor, roadSub, waterRiver, waterStream, waterArea };
 }
