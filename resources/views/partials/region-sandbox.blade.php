@@ -32,7 +32,7 @@
 @push('styles')
 <style>
     .region-stage { position: relative; aspect-ratio: 4 / 3; background: var(--term-bg); overflow: hidden; }
-    .region-canvas { display: block; width: 100%; height: 100%; }
+    .region-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     .region-labels { position: absolute; inset: 0; pointer-events: none; }
     .region-label {
         position: absolute; transform: translate(-50%, -120%);

@@ -10,7 +10,8 @@ const TILT_MAX = 25 * DEG;
  *  - two-finger / wheel-drag => scrub target along fixed map X/Z
  *  - idle => slow auto-orbit (disabled under prefers-reduced-motion)
  */
-export function createControls(camera, dom, aspect) {
+export function createControls(camera, dom, mapAspect) {
+  // mapAspect = height/width: the terrain plane's Z half-extent
   const target = new THREE.Vector3(0, 0, 0);
   const state = { azimuth: 0, tilt: 15 * DEG, radius: 2.6 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -46,7 +47,7 @@ export function createControls(camera, dom, aspect) {
   function scrub(dx, dz) {
     const k = 0.0015;
     target.x = Math.min(1, Math.max(-1, target.x + dx * k));
-    target.z = Math.min(aspect, Math.max(-aspect, target.z + dz * k));
+    target.z = Math.min(mapAspect, Math.max(-mapAspect, target.z + dz * k));
     lastInteract = performance.now();
   }
   dom.addEventListener('wheel', (e) => { e.preventDefault(); scrub(e.deltaX, e.deltaY); }, { passive: false });
@@ -54,6 +55,7 @@ export function createControls(camera, dom, aspect) {
   let touches = [];
   dom.addEventListener('touchstart', (e) => { touches = [...e.touches]; }, { passive: true });
   dom.addEventListener('touchmove', (e) => {
+    if (e.touches.length >= 1) e.preventDefault();
     if (e.touches.length === 2 && touches.length === 2) {
       const dx = e.touches[0].clientX - touches[0].clientX;
       const dy = e.touches[0].clientY - touches[0].clientY;
@@ -66,7 +68,7 @@ export function createControls(camera, dom, aspect) {
       lastInteract = performance.now();
     }
     touches = [...e.touches];
-  }, { passive: true });
+  }, { passive: false });
 
   return function updateControls() {
     if (!reduceMotion && performance.now() - lastInteract > 2500) {
