@@ -1,19 +1,20 @@
 import * as THREE from 'three';
 
 const GLYPHS = ' .:-=+*#%@'; // sparse -> dense
-const CELL = 8; // px per glyph cell
+const CELL = 6; // screen px per glyph cell (smaller = higher ASCII resolution)
+const ATLAS_CELL = 16; // px per glyph in the atlas texture (kept high for crisp glyphs)
 
 /** Renders GLYPHS into a single-row atlas texture (N cells wide). */
 function makeAtlas() {
   const n = GLYPHS.length;
   const c = document.createElement('canvas');
-  c.width = CELL * n; c.height = CELL;
+  c.width = ATLAS_CELL * n; c.height = ATLAS_CELL;
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, c.width, c.height);
   ctx.fillStyle = '#fff';
-  ctx.font = `${CELL}px monospace`;
+  ctx.font = `${ATLAS_CELL}px monospace`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (let i = 0; i < n; i++) ctx.fillText(GLYPHS[i], i * CELL + CELL / 2, CELL / 2);
+  for (let i = 0; i < n; i++) ctx.fillText(GLYPHS[i], i * ATLAS_CELL + ATLAS_CELL / 2, ATLAS_CELL / 2);
   const tex = new THREE.CanvasTexture(c);
   tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter;
   return { tex, count: n };
@@ -53,8 +54,16 @@ export function createAsciiPass(renderer, scene, camera) {
       void main(){
         vec2 px = vUv * uResolution;
         vec2 cellOrigin = floor(px / uCell) * uCell;
-        vec2 cellCenterUv = (cellOrigin + uCell*0.5) / uResolution;
-        float l = lum(texture2D(uScene, cellCenterUv).rgb);
+        // max luminance over a 3x3 grid in the cell, so a thin feature line
+        // anywhere inside it still lights the glyph (no rotate-and-vanish dropout)
+        float l = 0.0;
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            vec2 frac = (vec2(float(i), float(j)) + 0.5) / 3.0;
+            vec2 suv = (cellOrigin + frac * uCell) / uResolution;
+            l = max(l, lum(texture2D(uScene, suv).rgb));
+          }
+        }
         float gi = floor(clamp(l, 0.0, 0.999) * uCount);     // glyph index
         vec2 local = (px - cellOrigin) / uCell;               // 0..1 within cell
         vec2 atlasUv = vec2((gi + local.x) / uCount, 1.0 - local.y);
