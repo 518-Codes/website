@@ -13,7 +13,7 @@ const TILT_MAX = 45 * DEG;
 export function createControls(camera, dom, mapAspect) {
   // mapAspect = height/width: the terrain plane's Z half-extent
   const target = new THREE.Vector3(0, 0, 0);
-  const state = { azimuth: 0, tilt: 30 * DEG, radius: 2.1 };
+  const state = { azimuth: 0, tilt: 45 * DEG, radius: 1.7 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
 
