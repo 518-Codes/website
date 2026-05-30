@@ -36,7 +36,7 @@ export async function mountRegionSandbox(root) {
   try {
     const assets = await loadAssets(root.dataset.assets);
     const { scene, group, terrain, key, ambient, dims, stdMaterial, elevMaterial } = createScene(assets.heightmap);
-    const { roadLines, waterLines } = addFeatures(group, assets.heightmap, assets.features);
+    const { roadMajor, roadSub, waterLine, waterArea } = addFeatures(group, assets.heightmap, assets.features);
 
     const labelsEl = root.querySelector('.region-labels');
     const { update: updateLabels, setRelief: setLabelRelief } = createLabels(labelsEl, assets.heightmap, assets.cities);
@@ -89,10 +89,14 @@ export async function mountRegionSandbox(root) {
         terrain.material = on ? elevMaterial : stdMaterial;
         ascii.setElevation(on);
       },
+      setBandCount(n) { elevMaterial.uniforms.uBands.value = n; },
+      setBandCurve(g) { elevMaterial.uniforms.uCurve.value = g; },
       setLayer(name, on) {
         if (name === 'terrain') { terrain.visible = on; }
-        if (name === 'roads' && roadLines) { roadLines.visible = on; }
-        if (name === 'water' && waterLines) { waterLines.visible = on; }
+        if (name === 'road-major' && roadMajor) { roadMajor.visible = on; }
+        if (name === 'road-sub' && roadSub) { roadSub.visible = on; }
+        if (name === 'water-line' && waterLine) { waterLine.visible = on; }
+        if (name === 'water-area' && waterArea) { waterArea.visible = on; }
       },
       getValues() {
         const a = ascii.getValues();
@@ -107,8 +111,12 @@ export async function mountRegionSandbox(root) {
           orbitSpeed: c.orbitSpeed,
           mono: a.mono,
           elevation: a.elevation,
-          roads: roadLines ? roadLines.visible : false,
-          water: waterLines ? waterLines.visible : false,
+          bandCount: elevMaterial.uniforms.uBands.value,
+          bandCurve: elevMaterial.uniforms.uCurve.value,
+          'road-major': roadMajor ? roadMajor.visible : false,
+          'road-sub': roadSub ? roadSub.visible : false,
+          'water-line': waterLine ? waterLine.visible : false,
+          'water-area': waterArea ? waterArea.visible : false,
           terrain: terrain.visible,
         };
       },
