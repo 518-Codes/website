@@ -21,14 +21,25 @@ function makeAtlas() {
 }
 
 /**
- * Full-screen ASCII post-process. Renders `scene/camera` to a target, then
- * maps per-cell luminance to a phosphor glyph.
+ * Full-screen ASCII post-process. The scene is rendered into an offscreen target
+ * sized to the GLYPH-CELL GRID (one texel per cell), so the GPU rasterizes every
+ * feature into whichever cells it crosses — no phase-dependent sampling dropout
+ * (which caused features to vanish at certain cell sizes). The full-screen quad
+ * then stamps a glyph per cell, colored by that cell's single texel.
  */
 export function createAsciiPass(renderer, scene, camera) {
   const size = new THREE.Vector2();
   renderer.getSize(size);
   const target = new THREE.WebGLRenderTarget(size.x, size.y);
+  // Nearest + no mipmaps: each cell maps to exactly one texel, no bleeding.
+  target.texture.minFilter = THREE.NearestFilter;
+  target.texture.magFilter = THREE.NearestFilter;
+  target.texture.generateMipmaps = false;
   const { tex, count } = makeAtlas();
+
+  // Viewport size in CSS px (the cell grid is derived from this and uCell).
+  let vw = size.x;
+  let vh = size.y;
 
   const quadScene = new THREE.Scene();
   const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -56,25 +67,17 @@ export function createAsciiPass(renderer, scene, camera) {
       void main(){
         vec2 px = vUv * uResolution;
         vec2 cellOrigin = floor(px / uCell) * uCell;
-        // max luminance over a 3x3 grid in the cell, so a thin feature line
-        // anywhere inside it still lights the glyph (no rotate-and-vanish dropout)
-        float l = 0.0;
-        vec3 maxColor = vec3(0.0);
-        for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-            vec2 frac = (vec2(float(i), float(j)) + 0.5) / 3.0;
-            vec2 suv = (cellOrigin + frac * uCell) / uResolution;
-            vec3 tap = texture2D(uScene, suv).rgb;
-            float tl = lum(tap);
-            if (tl > l) { l = tl; maxColor = tap; }
-          }
-        }
+        // The scene target is rendered at cell-grid resolution, so one texel == one
+        // cell. Sampling at the cell center (nearest) reads that cell's feature/terrain.
+        vec2 cellCenterUv = (cellOrigin + uCell * 0.5) / uResolution;
+        vec3 tap = texture2D(uScene, cellCenterUv).rgb;
+        float l = lum(tap);
         float gi = floor(clamp(l, 0.0, 0.999) * uCount);     // glyph index
         vec2 local = (px - cellOrigin) / uCell;               // 0..1 within cell
         vec2 atlasUv = vec2((gi + local.x) / uCount, 1.0 - local.y);
         float glyph = texture2D(uAtlas, atlasUv).r;
         bool useColor = (uMono < 0.5) || (uElevation > 0.5);
-        vec3 base = useColor ? maxColor : uPhosphor;
+        vec3 base = useColor ? tap : uPhosphor;
         vec3 col = base * glyph * (1.0 + uGlow);
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -82,9 +85,19 @@ export function createAsciiPass(renderer, scene, camera) {
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
   quadScene.add(quad);
 
+  /** Size the render target to the current cell grid (cols x rows). */
+  function applyTargetSize() {
+    const cell = mat.uniforms.uCell.value;
+    const cols = Math.max(1, Math.round(vw / cell));
+    const rows = Math.max(1, Math.round(vh / cell));
+    target.setSize(cols, rows);
+  }
+
   function resize(w, h) {
-    target.setSize(w, h);
+    vw = w;
+    vh = h;
     mat.uniforms.uResolution.value.set(w, h);
+    applyTargetSize();
   }
 
   function render() {
@@ -95,7 +108,7 @@ export function createAsciiPass(renderer, scene, camera) {
   }
 
   const setGlow = (v) => { mat.uniforms.uGlow.value = v; };
-  const setCell = (v) => { mat.uniforms.uCell.value = v; };
+  const setCell = (v) => { mat.uniforms.uCell.value = v; applyTargetSize(); };
   const setMono = (b) => { mat.uniforms.uMono.value = b ? 1.0 : 0.0; };
   const setElevation = (b) => { mat.uniforms.uElevation.value = b ? 1.0 : 0.0; };
   const getValues = () => ({
