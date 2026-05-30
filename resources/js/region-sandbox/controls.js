@@ -1,19 +1,19 @@
 import * as THREE from 'three';
 
 const DEG = Math.PI / 180;
-const TILT_MIN = 5 * DEG;
-const TILT_MAX = 25 * DEG;
+const TILT_MIN = 15 * DEG;
+const TILT_MAX = 45 * DEG;
 
 /**
  * Constrained orbit controls:
- *  - drag horizontal => azimuth orbit; drag vertical => tilt (clamped 5–25°)
+ *  - drag horizontal => azimuth orbit; drag vertical => tilt (clamped 15–45°)
  *  - two-finger / wheel-drag => scrub target along fixed map X/Z
  *  - idle => slow auto-orbit (disabled under prefers-reduced-motion)
  */
 export function createControls(camera, dom, mapAspect) {
   // mapAspect = height/width: the terrain plane's Z half-extent
   const target = new THREE.Vector3(0, 0, 0);
-  const state = { azimuth: 0, tilt: 15 * DEG, radius: 2.6 };
+  const state = { azimuth: 0, tilt: 30 * DEG, radius: 2.1 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
 
