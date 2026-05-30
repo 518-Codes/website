@@ -42,5 +42,5 @@ export async function fetchOverpass(bbox: BBox): Promise<RawFeature[]> {
     body: 'data=' + encodeURIComponent(buildQuery(bbox)),
   });
   if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
-  return parseElements(await res.json());
+  return parseElements((await res.json()) as { elements?: any[] });
 }
