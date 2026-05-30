@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createScene } from './scene.js';
+import { createScene, addFeatures } from './scene.js';
 
 async function loadAssets(base) {
   const [heightmap, features, cities] = await Promise.all([
@@ -16,6 +16,7 @@ export async function mountRegionSandbox(root) {
 
   const assets = await loadAssets(root.dataset.assets);
   const { scene, dims } = createScene(assets.heightmap);
+  addFeatures(scene, assets.heightmap, assets.features);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
