@@ -465,8 +465,13 @@
             </label>
 
             <label class="ctl-check-row">
-                <input type="checkbox" id="ctl-layer-water-line">
-                <span class="ctl-check-label">rivers / streams</span>
+                <input type="checkbox" id="ctl-layer-water-river">
+                <span class="ctl-check-label">rivers / canals</span>
+            </label>
+
+            <label class="ctl-check-row">
+                <input type="checkbox" id="ctl-layer-water-stream">
+                <span class="ctl-check-label">streams</span>
             </label>
 
             <label class="ctl-check-row">
