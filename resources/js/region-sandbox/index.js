@@ -35,7 +35,7 @@ export async function mountRegionSandbox(root) {
 
   try {
     const assets = await loadAssets(root.dataset.assets);
-    const { scene, group, terrain, key, ambient, dims } = createScene(assets.heightmap);
+    const { scene, group, terrain, key, ambient, dims, stdMaterial, elevMaterial } = createScene(assets.heightmap);
     const { roadLines, waterLines } = addFeatures(group, assets.heightmap, assets.features);
 
     const labelsEl = root.querySelector('.region-labels');
@@ -85,6 +85,10 @@ export async function mountRegionSandbox(root) {
       setTilt,
       setOrbitSpeed,
       setMono: ascii.setMono,
+      setElevation(on) {
+        terrain.material = on ? elevMaterial : stdMaterial;
+        ascii.setElevation(on);
+      },
       setLayer(name, on) {
         if (name === 'terrain') { terrain.visible = on; }
         if (name === 'roads' && roadLines) { roadLines.visible = on; }
@@ -102,6 +106,7 @@ export async function mountRegionSandbox(root) {
           tilt: c.tiltDeg,
           orbitSpeed: c.orbitSpeed,
           mono: a.mono,
+          elevation: a.elevation,
           roads: roadLines ? roadLines.visible : false,
           water: waterLines ? waterLines.visible : false,
           terrain: terrain.visible,

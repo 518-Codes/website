@@ -18,8 +18,32 @@ export function createScene(heightmap) {
   }
   geo.computeVertexNormals();
 
-  const mat = new THREE.MeshStandardMaterial({ color: 0x2a3a2a, flatShading: false, metalness: 0, roughness: 1 });
-  const terrain = new THREE.Mesh(geo, mat);
+  const stdMaterial = new THREE.MeshStandardMaterial({ color: 0x2a3a2a, flatShading: false, metalness: 0, roughness: 1 });
+  // Unlit material that shades terrain by normalized height in discrete green bands.
+  const elevMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uRelief: { value: RELIEF },
+      uBands: { value: 8.0 },
+      uGreen: { value: new THREE.Color(0x5efc8d) },
+    },
+    vertexShader: `
+      varying float vH;
+      void main(){
+        vH = position.y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      precision highp float;
+      varying float vH;
+      uniform float uRelief, uBands;
+      uniform vec3 uGreen;
+      void main(){
+        float nh = clamp(vH / uRelief, 0.0, 1.0);
+        float band = floor(nh * uBands) / (uBands - 1.0);
+        gl_FragColor = vec4(uGreen * band * 0.8, 1.0);
+      }`,
+  });
+  const terrain = new THREE.Mesh(geo, stdMaterial);
   // Terrain + features live in a group so relief can be tuned via group.scale.y.
   const group = new THREE.Group();
   group.add(terrain);
@@ -32,7 +56,7 @@ export function createScene(heightmap) {
   const ambient = new THREE.AmbientLight(0xffffff, 0.25);
   scene.add(ambient);
 
-  return { scene, group, terrain, key, ambient, dims: { width, height } };
+  return { scene, group, terrain, key, ambient, dims: { width, height }, stdMaterial, elevMaterial };
 }
 
 /** Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1]. */

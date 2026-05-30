@@ -42,6 +42,7 @@ export function createAsciiPass(renderer, scene, camera) {
       uPhosphor: { value: new THREE.Color(0x5efc8d) },
       uGlow: { value: 0.25 },
       uMono: { value: 1.0 },
+      uElevation: { value: 0.0 },
     },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
     fragmentShader: `
@@ -49,7 +50,7 @@ export function createAsciiPass(renderer, scene, camera) {
       varying vec2 vUv;
       uniform sampler2D uScene, uAtlas;
       uniform vec2 uResolution;
-      uniform float uCell, uCount, uGlow, uMono;
+      uniform float uCell, uCount, uGlow, uMono, uElevation;
       uniform vec3 uPhosphor;
       float lum(vec3 c){ return dot(c, vec3(0.299,0.587,0.114)); }
       void main(){
@@ -72,7 +73,8 @@ export function createAsciiPass(renderer, scene, camera) {
         vec2 local = (px - cellOrigin) / uCell;               // 0..1 within cell
         vec2 atlasUv = vec2((gi + local.x) / uCount, 1.0 - local.y);
         float glyph = texture2D(uAtlas, atlasUv).r;
-        vec3 base = (uMono > 0.5) ? uPhosphor : maxColor;
+        bool useColor = (uMono < 0.5) || (uElevation > 0.5);
+        vec3 base = useColor ? maxColor : uPhosphor;
         vec3 col = base * glyph * (1.0 + uGlow);
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -95,11 +97,13 @@ export function createAsciiPass(renderer, scene, camera) {
   const setGlow = (v) => { mat.uniforms.uGlow.value = v; };
   const setCell = (v) => { mat.uniforms.uCell.value = v; };
   const setMono = (b) => { mat.uniforms.uMono.value = b ? 1.0 : 0.0; };
+  const setElevation = (b) => { mat.uniforms.uElevation.value = b ? 1.0 : 0.0; };
   const getValues = () => ({
     glow: mat.uniforms.uGlow.value,
     cell: mat.uniforms.uCell.value,
     mono: mat.uniforms.uMono.value > 0.5,
+    elevation: mat.uniforms.uElevation.value > 0.5,
   });
 
-  return { render, resize, setGlow, setCell, setMono, getValues };
+  return { render, resize, setGlow, setCell, setMono, setElevation, getValues };
 }
