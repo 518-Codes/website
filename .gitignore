@@ -1,3 +1,4 @@
+/dist
 *.log
 .DS_Store
 .env
@@ -21,6 +22,9 @@
 /storage/*.key
 /storage/pail
 /vendor
+/.superpowers
+/tmp/region-map.html
+/region-map.png
 _ide_helper.php
 Homestead.json
 Homestead.yaml
