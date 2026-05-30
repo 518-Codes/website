@@ -18,18 +18,21 @@ export async function mountRegionSandbox(root) {
   const { scene, dims } = createScene(assets.heightmap);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  const resize = () => {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    renderer.setSize(w, h, false);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  };
-  resize();
-  window.addEventListener('resize', resize);
 
   const aspect = dims.width / dims.height;
   const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100);
   camera.position.set(0, 1.2, 2.4);
   camera.lookAt(0, 0, 0);
+
+  const resize = () => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+  resize();
+  window.addEventListener('resize', resize);
 
   let raf = 0;
   const tick = () => { raf = requestAnimationFrame(tick); renderer.render(scene, camera); };
