@@ -1,17 +1,17 @@
 import * as THREE from 'three';
-import { createScene, addFeatures } from './scene.js';
-import { createLabels } from './labels.js';
+import { createWorld, createChunkContent } from './scene.js';
+import { createChunkLabels } from './labels.js';
 import { createControls } from './controls.js';
 import { createAsciiPass } from './ascii-pass.js';
 
-async function loadAssets(base) {
-  const [heightmap, features, cities] = await Promise.all([
-    fetch(`${base}/heightmap.json`).then((r) => r.json()),
-    fetch(`${base}/features.json`).then((r) => r.json()),
-    fetch(`${base}/cities.json`).then((r) => r.json()),
-  ]);
-  return { heightmap, features, cities };
-}
+/** Maps a layer name to its handle key on createChunkContent's `handles`. */
+const LAYER_HANDLE = {
+  'road-major': 'roadMajor',
+  'road-sub': 'roadSub',
+  'water-river': 'waterRiver',
+  'water-stream': 'waterStream',
+  'water-area': 'waterArea',
+};
 
 /** Real WebGL capability probe (a truthy global is not enough). */
 function webglOk() {
@@ -34,20 +34,101 @@ export async function mountRegionSandbox(root) {
   if (!webglOk()) { showFallback(root); return; }
 
   try {
-    const assets = await loadAssets(root.dataset.assets);
-    const { scene, group, terrain, key, ambient, dims, stdMaterial, elevMaterial } = createScene(assets.heightmap);
-    const { roadMajor, roadSub, waterRiver, waterStream, waterArea } = addFeatures(group, assets.heightmap, assets.features);
-    if (waterStream) { waterStream.visible = false; } // streams hidden by default (declutter)
+    const base = root.dataset.assets;
+    const manifest = await fetch(`${base}/corridor/manifest.json`).then((r) => r.json());
+
+    const chunkCount = manifest.chunkCount;
+    const chunkAspect = manifest.chunkAspect;
+    const chunkZSpan = 2 * chunkAspect;
+    // Corridor world-z range: north edge -chunkAspect, south edge (2*(N-1)+1)*chunkAspect.
+    const corridorMinZ = -chunkAspect;
+    const corridorMaxZ = (2 * (chunkCount - 1) + 1) * chunkAspect;
+
+    const scene = new THREE.Scene();
+    const { key, ambient, stdMaterial, elevMaterial, worldGroup } = createWorld(scene);
 
     const labelsEl = root.querySelector('.region-labels');
-    const { update: updateLabels, setRelief: setLabelRelief } = createLabels(labelsEl, assets.heightmap, assets.cities);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
-    const aspect = dims.width / dims.height;
-    const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100);
-    const { update: updateControls, setRadius, setTilt, setOrbitSpeed, getValues: getControlValues } = createControls(camera, canvas, dims.height / dims.width);
+    // Grid is square-ish per chunk (256 x 94); camera aspect comes from the canvas at resize.
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+    const controls = createControls(camera, canvas, chunkAspect);
+    controls.setScrubBounds(corridorMinZ, corridorMaxZ);
+    controls.setTarget(chunkAspect); // frame the Capital Region (chunks 0-1) initially
     const ascii = createAsciiPass(renderer, scene, camera);
+
+    // Current control state shared across all chunks; new chunks inherit it on load.
+    const settings = {
+      relief: 0.35,
+      light: 1.6,
+      elevationOn: false,
+      layers: {
+        'road-major': true,
+        'road-sub': true,
+        'water-river': true,
+        'water-stream': false, // streams hidden by default (declutter)
+        'water-area': true,
+        terrain: true,
+      },
+    };
+
+    /** index -> { content, labels } */
+    const loaded = new Map();
+    const loading = new Set();
+
+    /** Apply current layer visibility (from settings) to a chunk's content. */
+    const applyLayers = (content) => {
+      content.terrain.visible = settings.layers.terrain;
+      for (const [name, handleKey] of Object.entries(LAYER_HANDLE)) {
+        const h = content.handles[handleKey];
+        if (h) { h.visible = settings.layers[name]; }
+      }
+    };
+
+    async function loadChunk(i) {
+      if (i < 0 || i >= chunkCount) { return; }
+      if (loaded.has(i) || loading.has(i)) { return; }
+      loading.add(i);
+      try {
+        const meta = manifest.chunks[i];
+        const chunk = await fetch(`${base}/corridor/${meta.file}`).then((r) => r.json());
+        // A concurrent caller may have finished first.
+        if (loaded.has(i)) { return; }
+
+        const content = createChunkContent(chunk.heightmap, chunk.features, {
+          stdMaterial,
+          elevMaterial,
+          chunkAspect,
+          useElev: settings.elevationOn,
+        });
+        content.group.position.z = i * chunkZSpan;
+        applyLayers(content);
+        worldGroup.add(content.group);
+
+        const labels = createChunkLabels(labelsEl, chunk.heightmap, chunk.cities, {
+          chunkAspect,
+          zOffset: i * chunkZSpan,
+        });
+
+        loaded.set(i, { content, labels });
+      } catch (err) {
+        console.error(`[region-sandbox] failed to load chunk ${i}`, err);
+      } finally {
+        loading.delete(i);
+      }
+    }
+
+    /** Ensure the chunks around the camera's z target are loaded (bias south). */
+    const stream = () => {
+      const idx = Math.min(chunkCount - 1, Math.max(0, Math.round(controls.target.z / chunkZSpan)));
+      for (let i = idx - 1; i <= idx + 2; i++) {
+        loadChunk(i);
+      }
+    };
+
+    // Initial load: chunks 0, 1, 2.
+    loadChunk(0); loadChunk(1); loadChunk(2);
 
     const resize = () => {
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -64,8 +145,12 @@ export async function mountRegionSandbox(root) {
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
-      updateControls();
-      updateLabels(camera, canvas.clientWidth, canvas.clientHeight);
+      controls.update();
+      stream();
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      for (const { labels } of loaded.values()) {
+        labels.update(camera, w, h, settings.relief);
+      }
       ascii.render();
     };
     tick();
@@ -78,49 +163,56 @@ export async function mountRegionSandbox(root) {
     vis.observe(root);
 
     const api = {
-      setRelief(v) { group.scale.y = v / 0.35; setLabelRelief(v); },
+      setRelief(v) { settings.relief = v; worldGroup.scale.y = v / 0.35; },
       setGlow: ascii.setGlow,
       setCell: ascii.setCell,
-      setLight(v) { key.intensity = v; ambient.intensity = v * 0.156; },
-      setRadius,
-      setTilt,
-      setOrbitSpeed,
+      setLight(v) { settings.light = v; key.intensity = v; ambient.intensity = v * 0.156; },
+      setRadius: controls.setRadius,
+      setTilt: controls.setTilt,
+      setOrbitSpeed: controls.setOrbitSpeed,
       setMono: ascii.setMono,
       setElevation(on) {
-        terrain.material = on ? elevMaterial : stdMaterial;
+        settings.elevationOn = on;
         ascii.setElevation(on);
+        for (const { content } of loaded.values()) {
+          content.terrain.material = on ? elevMaterial : stdMaterial;
+        }
       },
       setBandCount(n) { elevMaterial.uniforms.uBands.value = n; },
       setBandCurve(g) { elevMaterial.uniforms.uCurve.value = g; },
       setLayer(name, on) {
-        if (name === 'terrain') { terrain.visible = on; }
-        if (name === 'road-major' && roadMajor) { roadMajor.visible = on; }
-        if (name === 'road-sub' && roadSub) { roadSub.visible = on; }
-        if (name === 'water-river' && waterRiver) { waterRiver.visible = on; }
-        if (name === 'water-stream' && waterStream) { waterStream.visible = on; }
-        if (name === 'water-area' && waterArea) { waterArea.visible = on; }
+        if (!(name in settings.layers)) { return; }
+        settings.layers[name] = on;
+        for (const { content } of loaded.values()) {
+          if (name === 'terrain') {
+            content.terrain.visible = on;
+          } else {
+            const h = content.handles[LAYER_HANDLE[name]];
+            if (h) { h.visible = on; }
+          }
+        }
       },
       getValues() {
         const a = ascii.getValues();
-        const c = getControlValues();
+        const c = controls.getValues();
         return {
-          relief: group.scale.y * 0.35,
+          relief: settings.relief,
           glow: a.glow,
           cell: a.cell,
-          light: key.intensity,
+          light: settings.light,
           radius: c.radius,
           tilt: c.tiltDeg,
           orbitSpeed: c.orbitSpeed,
           mono: a.mono,
-          elevation: a.elevation,
+          elevation: settings.elevationOn,
           bandCount: elevMaterial.uniforms.uBands.value,
           bandCurve: elevMaterial.uniforms.uCurve.value,
-          'road-major': roadMajor ? roadMajor.visible : false,
-          'road-sub': roadSub ? roadSub.visible : false,
-          'water-river': waterRiver ? waterRiver.visible : false,
-          'water-stream': waterStream ? waterStream.visible : false,
-          'water-area': waterArea ? waterArea.visible : false,
-          terrain: terrain.visible,
+          'road-major': settings.layers['road-major'],
+          'road-sub': settings.layers['road-sub'],
+          'water-river': settings.layers['water-river'],
+          'water-stream': settings.layers['water-stream'],
+          'water-area': settings.layers['water-area'],
+          terrain: settings.layers.terrain,
         };
       },
     };

@@ -17,6 +17,10 @@ export function createControls(camera, dom, mapAspect) {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
   let orbitSpeed = 0.001;
+  // Scrub Z clamp bounds; default to the symmetric single-map range, overridable
+  // via setScrubBounds for the streaming corridor.
+  let scrubMinZ = -mapAspect;
+  let scrubMaxZ = mapAspect;
 
   function apply() {
     const r = state.radius;
@@ -48,7 +52,7 @@ export function createControls(camera, dom, mapAspect) {
   function scrub(dx, dz) {
     const k = 0.0015;
     target.x = Math.min(1, Math.max(-1, target.x + dx * k));
-    target.z = Math.min(mapAspect, Math.max(-mapAspect, target.z + dz * k));
+    target.z = Math.min(scrubMaxZ, Math.max(scrubMinZ, target.z + dz * k));
     lastInteract = performance.now();
   }
   dom.addEventListener('wheel', (e) => { e.preventDefault(); scrub(e.deltaX, e.deltaY); }, { passive: false });
@@ -85,7 +89,9 @@ export function createControls(camera, dom, mapAspect) {
   const setRadius = (v) => { state.radius = v; };
   const setTilt = (deg) => { state.tilt = Math.min(TUNE_TILT_MAX, Math.max(TUNE_TILT_MIN, deg * DEG)); };
   const setOrbitSpeed = (v) => { orbitSpeed = v; };
+  const setScrubBounds = (minZ, maxZ) => { scrubMinZ = minZ; scrubMaxZ = maxZ; };
+  const setTarget = (z) => { target.z = Math.min(scrubMaxZ, Math.max(scrubMinZ, z)); };
   const getValues = () => ({ radius: state.radius, tiltDeg: state.tilt / DEG, orbitSpeed });
 
-  return { update, setRadius, setTilt, setOrbitSpeed, getValues };
+  return { update, setRadius, setTilt, setOrbitSpeed, setScrubBounds, setTarget, target, getValues };
 }
