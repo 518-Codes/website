@@ -1,0 +1,91 @@
+{
+  "corridor": {
+    "minLng": -74.3,
+    "minLat": 40.55,
+    "maxLng": -73.4,
+    "maxLat": 43.2
+  },
+  "chunkCount": 8,
+  "gridW": 256,
+  "chunkGridH": 94,
+  "latSpan": 0.3312500000000007,
+  "lngSpan": 0.8999999999999915,
+  "chunkAspect": 0.3671875,
+  "chunks": [
+    {
+      "index": 0,
+      "file": "chunk-0.json",
+      "minLat": 42.868750000000006,
+      "maxLat": 43.2,
+      "cityNames": [
+        "Saratoga"
+      ]
+    },
+    {
+      "index": 1,
+      "file": "chunk-1.json",
+      "minLat": 42.53750000000001,
+      "maxLat": 42.868750000000006,
+      "cityNames": [
+        "Schenectady",
+        "Troy",
+        "Albany"
+      ]
+    },
+    {
+      "index": 2,
+      "file": "chunk-2.json",
+      "minLat": 42.20625,
+      "maxLat": 42.5375,
+      "cityNames": [
+        "Hudson"
+      ]
+    },
+    {
+      "index": 3,
+      "file": "chunk-3.json",
+      "minLat": 41.875,
+      "maxLat": 42.20625,
+      "cityNames": [
+        "Kingston"
+      ]
+    },
+    {
+      "index": 4,
+      "file": "chunk-4.json",
+      "minLat": 41.54375,
+      "maxLat": 41.875,
+      "cityNames": [
+        "Poughkeepsie"
+      ]
+    },
+    {
+      "index": 5,
+      "file": "chunk-5.json",
+      "minLat": 41.212500000000006,
+      "maxLat": 41.54375,
+      "cityNames": [
+        "Newburgh",
+        "Peekskill"
+      ]
+    },
+    {
+      "index": 6,
+      "file": "chunk-6.json",
+      "minLat": 40.881249999999994,
+      "maxLat": 41.2125,
+      "cityNames": [
+        "Yonkers"
+      ]
+    },
+    {
+      "index": 7,
+      "file": "chunk-7.json",
+      "minLat": 40.55,
+      "maxLat": 40.881249999999994,
+      "cityNames": [
+        "New York City"
+      ]
+    }
+  ]
+}
