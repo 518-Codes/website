@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, statSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
@@ -29,18 +29,20 @@ const templateSrc = join(root, 'scripts/region-sandbox/index.template.html');
 const htmlDest = join(outDir, 'index.html');
 copyFileSync(templateSrc, htmlDest);
 
-// 3. Copy public assets
+// 3. Copy public assets: the streaming corridor (manifest + chunks) + the WebGL fallback image.
 const assetsSrc = join(root, 'public/region-sandbox');
-const assetFiles = ['heightmap.json', 'features.json', 'cities.json', 'fallback.jpg'];
+const assetFiles = ['fallback.jpg'];
 for (const file of assetFiles) {
   copyFileSync(join(assetsSrc, file), join(assetsOutDir, file));
 }
+cpSync(join(assetsSrc, 'corridor'), join(assetsOutDir, 'corridor'), { recursive: true });
 
 // 4. Report
 const written = [
   join(outDir, 'app.js'),
   htmlDest,
   ...assetFiles.map(f => join(assetsOutDir, f)),
+  join(assetsOutDir, 'corridor'),
 ];
 
 console.log('\nBuild complete — dist/region-map/');
