@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "build:sandbox": "bun run scripts/region-sandbox/build-data.ts",
+        "build:corridor": "bun run scripts/region-sandbox/build-corridor.ts",
         "build:page": "bun run scripts/region-sandbox/build-page.ts",
         "dev": "vite"
     },

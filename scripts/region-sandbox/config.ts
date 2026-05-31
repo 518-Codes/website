@@ -25,3 +25,24 @@ export const CITIES: { name: string; lat: number; lng: number }[] = [
 ];
 
 export const OUTPUT_DIR = 'public/region-sandbox';
+
+/** Full Albany→NYC Hudson corridor (tall strip). */
+export const CORRIDOR: BBox = { minLng: -74.3, minLat: 40.55, maxLng: -73.4, maxLat: 43.2 };
+/** Number of latitude chunks the corridor is split into (north→south). */
+export const CHUNK_COUNT = 8;
+/** Per-chunk heightmap grid width (height derived to keep ~square cells). */
+export const CHUNK_GRID_W = 256;
+/** Cities along the corridor (assigned to whichever chunk contains them). */
+export const CORRIDOR_CITIES: { name: string; lat: number; lng: number }[] = [
+  { name: 'Saratoga', lat: 43.0831, lng: -73.7846 },
+  { name: 'Schenectady', lat: 42.8142, lng: -73.9396 },
+  { name: 'Troy', lat: 42.7284, lng: -73.6918 },
+  { name: 'Albany', lat: 42.6526, lng: -73.7562 },
+  { name: 'Hudson', lat: 42.2526, lng: -73.7910 },
+  { name: 'Kingston', lat: 41.9270, lng: -73.9974 },
+  { name: 'Poughkeepsie', lat: 41.7004, lng: -73.9209 },
+  { name: 'Newburgh', lat: 41.5034, lng: -74.0104 },
+  { name: 'Peekskill', lat: 41.2901, lng: -73.9204 },
+  { name: 'Yonkers', lat: 40.9312, lng: -73.8987 },
+  { name: 'New York City', lat: 40.7128, lng: -74.0060 },
+];
