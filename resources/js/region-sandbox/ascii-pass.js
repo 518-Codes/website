@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const GLYPHS = ' .:-=+*#%@'; // sparse -> dense
-const CELL = 4; // screen px per glyph cell (smaller = higher ASCII resolution)
+const CELL = 3; // screen px per glyph cell (smaller = higher ASCII resolution)
 const ATLAS_CELL = 16; // px per glyph in the atlas texture (kept high for crisp glyphs)
 
 /** Renders GLYPHS into a single-row atlas texture (N cells wide). */
