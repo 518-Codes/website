@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { sampleHeight, RELIEF } from './scene.js';
 import { recencyDays, recencyToSize, countdownLabel } from './events.js';
 
-const SPARKLE_MAX = 24; // particles per sparkling beacon
+const SPARKLE_MAX = 20; // particles per sparkling beacon
 
 /** Escape admin-entered text before innerHTML interpolation (text + double-quoted attrs). */
 function escapeHtml(s) {
@@ -12,6 +12,20 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/** Vertex-color gradient on a unit cone: bright at the base, dim toward the apex. */
+function applyVerticalGradient(geo) {
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const t = pos.getY(i) + 0.5;   // 0 at base, 1 at apex (unit cone spans -0.5..+0.5)
+    const b = 1.0 - 0.8 * t;       // 1.0 at base -> 0.2 at apex
+    colors[i * 3] = b;
+    colors[i * 3 + 1] = b;
+    colors[i * 3 + 2] = b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 }
 
 /**
@@ -35,23 +49,39 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     const z = (g.z * 2 - 1) * chunkAspect + zOffset;
     const baseY = sampleHeight(heightmap, g.x, g.z) * RELIEF;
 
-    // Beacon column: unit-height box scaled per-frame by the size envelope.
-    const beaconGeo = new THREE.BoxGeometry(1, 1, 1);
-    const beaconMat = new THREE.MeshBasicMaterial({ color: color.clone(), transparent: true });
+    // Beacon: a slender unit cone (wide base -> point top, an inverted-funnel spire),
+    // scaled per-frame by the size envelope. A vertex-color gradient makes it brighter
+    // at the base and dim toward the top; per-frame glow tints the whole cone.
+    const beaconGeo = new THREE.ConeGeometry(1, 1, 14, 6);
+    applyVerticalGradient(beaconGeo);
+    const beaconMat = new THREE.MeshBasicMaterial({ color: color.clone(), transparent: true, vertexColors: true });
     const beacon = new THREE.Mesh(beaconGeo, beaconMat);
     group.add(beacon);
 
-    // Sparkle emitter (created lazily-ish: geometry always present, draw range gates it).
+    // Sparkle emitter: a constant stream of fine glints rising from the base centre
+    // outward into a short, randomized dome. Per-particle direction + phase offset are
+    // set once so emission is a steady stream (not synchronized bursts); per-particle
+    // colour (additive) does the fade in/out.
     const sparkPos = new Float32Array(SPARKLE_MAX * 3);
-    const sparkSeed = new Float32Array(SPARKLE_MAX); // per-particle phase 0..1
+    const sparkCol = new Float32Array(SPARKLE_MAX * 3);
+    const sparkAz = new Float32Array(SPARKLE_MAX);   // azimuth around the base
+    const sparkEl = new Float32Array(SPARKLE_MAX);   // dome elevation (0 = flat .. up)
+    const sparkOff = new Float32Array(SPARKLE_MAX);  // phase offset -> staggered stream
+    const sparkSpd = new Float32Array(SPARKLE_MAX);  // per-particle speed
+    const sparkRad = new Float32Array(SPARKLE_MAX);  // per-particle reach scale
     for (let i = 0; i < SPARKLE_MAX; i++) {
-      sparkSeed[i] = i / SPARKLE_MAX;
+      sparkAz[i] = Math.random() * 6.2831853;
+      sparkEl[i] = Math.random() * Math.random() * 1.4; // bias toward the dome floor
+      sparkOff[i] = Math.random();
+      sparkSpd[i] = 0.7 + Math.random() * 0.7;
+      sparkRad[i] = 0.6 + Math.random() * 0.8;
     }
     const sparkGeo = new THREE.BufferGeometry();
     sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+    sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkCol, 3));
     const sparkMat = new THREE.PointsMaterial({
-      color: color.clone(), size: 0.035, transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      size: 0.016, transparent: true, depthWrite: false,
+      vertexColors: true, blending: THREE.AdditiveBlending,
     });
     const sparkles = new THREE.Points(sparkGeo, sparkMat);
     sparkles.position.set(x, baseY, z);
@@ -75,7 +105,8 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     });
 
     return {
-      g, x, z, baseY, beacon, beaconMat, sparkles, sparkGeo, sparkMat, sparkPos, sparkSeed,
+      g, x, z, baseY, beacon, beaconMat, sparkles, sparkGeo, sparkMat,
+      sparkPos, sparkCol, sparkAz, sparkEl, sparkOff, sparkSpd, sparkRad,
       el, popover, world: new THREE.Vector3(x, baseY, z),
     };
   });
@@ -106,29 +137,37 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       it.beaconMat.opacity = Math.min(1, 0.55 + 0.45 * size.glow);
       it.beacon.material.color.copy(color).multiplyScalar(Math.min(1, 0.6 + size.glow));
 
-      // Sparkle: only within the sparkle horizon, intensity ramps toward the event.
+      // Sparkle: a subtle constant stream rising from the base centre outward into a
+      // short, randomized dome. Only within the sparkle horizon; density + brightness
+      // ramp in as the event nears.
       const sparkDays = thresholds.sparkleHorizon;
       const sparkOn = !reduceMotion && days <= sparkDays;
       it.sparkles.visible = sparkOn;
       if (sparkOn) {
         const intensity = (1 - Math.min(1, Math.max(0, days) / sparkDays)) * thresholds.sparkleIntensity;
-        const count = Math.max(1, Math.round(SPARKLE_MAX * intensity));
+        const count = Math.max(1, Math.round(SPARKLE_MAX * (0.35 + 0.65 * intensity)));
         it.sparkGeo.setDrawRange(0, count);
-        it.sparkMat.opacity = 0.35 + 0.65 * intensity;
-        it.sparkMat.size = 0.025 + 0.03 * intensity;
+        it.sparkMat.size = 0.012 + 0.008 * intensity;
         it.sparkles.position.set(it.x, baseY, it.z);
 
         const tSec = nowMs / 1000;
-        const rise = size.height * 1.15;
+        const domeR = 0.05 + size.width * 3;       // short, subtle footprint
+        const domeH = domeR * 0.6;                 // flatter than it is wide
+        const peak = 0.18 + 0.32 * intensity;      // max per-particle brightness (subtle)
         for (let i = 0; i < count; i++) {
-          const phase = (tSec * 0.6 + it.sparkSeed[i]) % 1;
-          const a = it.sparkSeed[i] * 6.2831853;
-          const r = size.width * (1.5 + 2.5 * phase);
-          it.sparkPos[i * 3] = Math.cos(a + tSec) * r;
-          it.sparkPos[i * 3 + 1] = phase * rise;
-          it.sparkPos[i * 3 + 2] = Math.sin(a + tSec) * r;
+          const phase = (tSec * 0.35 * it.sparkSpd[i] + it.sparkOff[i]) % 1;
+          const reach = phase * it.sparkRad[i];
+          const ce = Math.cos(it.sparkEl[i]);
+          it.sparkPos[i * 3] = Math.cos(it.sparkAz[i]) * ce * domeR * reach;
+          it.sparkPos[i * 3 + 1] = Math.sin(it.sparkEl[i]) * domeH * reach;
+          it.sparkPos[i * 3 + 2] = Math.sin(it.sparkAz[i]) * ce * domeR * reach;
+          const a = Math.sin(phase * Math.PI) * peak; // fade in then out over each life
+          it.sparkCol[i * 3] = color.r * a;
+          it.sparkCol[i * 3 + 1] = color.g * a;
+          it.sparkCol[i * 3 + 2] = color.b * a;
         }
         it.sparkGeo.attributes.position.needsUpdate = true;
+        it.sparkGeo.attributes.color.needsUpdate = true;
       }
 
       // Label (+ popover) — only within the label horizon.

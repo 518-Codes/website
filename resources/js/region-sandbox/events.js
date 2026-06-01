@@ -4,8 +4,8 @@ export const EVENT_DEFAULTS = {
   labelHorizon: 14,
   sparkleHorizon: 7,
   spotlight: 2,
-  beaconMinHeight: 0.25,
-  beaconMaxHeight: 1.2,
+  beaconMinHeight: 0.12,
+  beaconMaxHeight: 0.5,
   beaconGlow: 1.0,
   sparkleIntensity: 1.0,
   spotlightBoost: 1.6,
@@ -31,7 +31,7 @@ export function recencyToSize(days, t = EVENT_DEFAULTS) {
   const boost = spotlight ? t.spotlightBoost : 1;
 
   const height = (t.beaconMinHeight + (t.beaconMaxHeight - t.beaconMinHeight) * norm) * boost;
-  const width = (0.012 + 0.05 * norm) * boost;
+  const width = (0.006 + 0.02 * norm) * boost;
   const glow = t.beaconGlow * (0.4 + 0.6 * norm) * (spotlight ? 1.5 : 1);
 
   return { visible: true, height, width, glow, norm, spotlight };
