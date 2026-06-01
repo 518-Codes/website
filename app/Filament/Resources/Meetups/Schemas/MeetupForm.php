@@ -3,14 +3,18 @@
 namespace App\Filament\Resources\Meetups\Schemas;
 
 use App\Enums\MeetupStatus;
+use App\Services\GeocodingService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -42,6 +46,31 @@ class MeetupForm
                 TextInput::make('location')
                     ->required()
                     ->columnSpanFull(),
+
+                Grid::make(3)->schema([
+                    TextInput::make('latitude')
+                        ->numeric()
+                        ->step('any')
+                        ->helperText('Blank → auto-geocoded from location on save.'),
+
+                    TextInput::make('longitude')
+                        ->numeric()
+                        ->step('any'),
+
+                    Actions::make([
+                        Action::make('geocode')
+                            ->label('Geocode from location')
+                            ->icon('heroicon-o-map-pin')
+                            ->action(function (Get $get, Set $set, GeocodingService $geocoder): void {
+                                $coords = $geocoder->geocode((string) $get('location'));
+                                if ($coords === null) {
+                                    return;
+                                }
+                                $set('latitude', $coords['lat']);
+                                $set('longitude', $coords['lng']);
+                            }),
+                    ]),
+                ])->columnSpanFull(),
 
                 Grid::make(2)->schema([
                     DateTimePicker::make('starts_at')
