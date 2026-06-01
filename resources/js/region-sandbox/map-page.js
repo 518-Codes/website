@@ -27,6 +27,7 @@ const TOGGLES = [
   ['mono', 'setMono'],
   ['elevation', 'setElevation'],
   ['events', 'setEventsVisible'],
+  ['beaconCone', 'setBeaconCone'],
 ];
 const LAYERS = ['road-major', 'road-sub', 'water-river', 'water-stream', 'water-area', 'terrain'];
 

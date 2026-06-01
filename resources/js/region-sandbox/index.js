@@ -302,6 +302,7 @@ export async function mountRegionSandbox(root) {
       setBeaconGradient(v) { eventThresholds.beaconGradient = v; },
       setBeaconHue(v) { eventThresholds.beaconHue = v; },
       setBeaconSaturation(v) { eventThresholds.beaconSaturation = v; },
+      setBeaconCone(on) { eventThresholds.beaconCone = on; },
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
@@ -338,6 +339,7 @@ export async function mountRegionSandbox(root) {
           beaconGradient: eventThresholds.beaconGradient,
           beaconHue: eventThresholds.beaconHue,
           beaconSaturation: eventThresholds.beaconSaturation,
+          beaconCone: eventThresholds.beaconCone,
           ...glow,
         };
       },

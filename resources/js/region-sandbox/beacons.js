@@ -49,17 +49,19 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   // Beacon + sparkle tint from a tunable hue + saturation at a fixed loot-glow lightness.
   const color = new THREE.Color().setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75);
 
+  // Two beacon shapes shared across this chunk's beacons, swapped live by `beaconCone`.
+  // The truncated cone keeps a flat top so the dim gradient registers through the ASCII
+  // cells (a sharp apex is a sub-cell point); the box is the alternative square shape.
+  const coneGeo = new THREE.CylinderGeometry(0.3, 1, 1, 16, 6);
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+
   const items = groups.map((g) => {
     const x = g.x * 2 - 1;
     const z = (g.z * 2 - 1) * chunkAspect + zOffset;
     const baseY = sampleHeight(heightmap, g.x, g.z) * RELIEF;
 
-    // Beacon: a slender truncated cone (wide bright base -> narrower dim top, stopping
-    // flat like an inverted funnel) scaled per-frame by the size envelope. The flat-ish
-    // top keeps enough width for the dim gradient to register through the ASCII cells —
-    // a sharp apex is a sub-cell point and the dim band never appears. Shader fades
-    // bright-at-base to dim-at-top; uGlow/uOpacity are set per-frame.
-    const beaconGeo = new THREE.CylinderGeometry(0.3, 1, 1, 16, 6);
+    // Beacon scaled per-frame by the size envelope; shape (cone/box) swapped per-frame.
+    // Shader fades bright-at-base to dim-at-top; uGlow/uOpacity/uColor set per-frame.
     const beaconMat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: color.clone() },
@@ -71,7 +73,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       vertexShader: BEACON_VERT,
       fragmentShader: BEACON_FRAG,
     });
-    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+    const beacon = new THREE.Mesh(thresholds.beaconCone ? coneGeo : boxGeo, beaconMat);
     group.add(beacon);
 
     // Sparkle emitter: a constant stream of fine glints rising from the base centre
@@ -156,6 +158,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       it.beacon.visible = true;
       it.beacon.scale.set(size.width, size.height, size.width);
       it.beacon.position.set(it.x, baseY + size.height / 2, it.z);
+      it.beacon.geometry = thresholds.beaconCone ? coneGeo : boxGeo;
       it.beaconMat.uniforms.uColor.value.copy(color);
       it.beaconMat.uniforms.uGlow.value = Math.min(1.5, 0.6 + size.glow);
       it.beaconMat.uniforms.uOpacity.value = Math.min(1, 0.55 + 0.45 * size.glow);
@@ -231,13 +234,14 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
 
   const dispose = () => {
     for (const it of items) {
-      it.beacon.geometry.dispose();
       it.beaconMat.dispose();
       it.sparkGeo.dispose();
       it.sparkMat.dispose();
       if (it.el.parentNode) { it.el.parentNode.removeChild(it.el); }
       if (it.popover.parentNode) { it.popover.parentNode.removeChild(it.popover); }
     }
+    coneGeo.dispose(); // shared beacon shapes
+    boxGeo.dispose();
   };
 
   return { group, items, update, dispose };
