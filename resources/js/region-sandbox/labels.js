@@ -3,22 +3,22 @@ import { sampleHeight } from './scene.js';
 
 /**
  * Creates DOM labels for one chunk's cities. World positions account for the chunk's
- * z offset; y is recomputed from relief each update so relief changes are reflected.
+ * world center; y is recomputed from relief each update so relief changes are reflected.
  *
  * @param {HTMLElement} container the `.region-labels` element
  * @param {{width:number,height:number,data:number[]}} heightmap
  * @param {Array<{name:string,x:number,z:number}>} cities local-normalized coords
- * @param {{ chunkAspect: number, zOffset: number }} opts
+ * @param {{ width:number, depth:number, worldX:number, worldZ:number }} opts
  * @returns {{ items: Array, update: (camera: THREE.Camera, w: number, h: number, relief: number) => void, destroy: () => void }}
  */
-export function createChunkLabels(container, heightmap, cities, { chunkAspect, zOffset }) {
+export function createChunkLabels(container, heightmap, cities, { width, depth, worldX, worldZ }) {
   const items = cities.map((c) => {
     const el = document.createElement('div');
     el.className = 'region-label';
     el.textContent = c.name;
     container.appendChild(el);
-    const x = c.x * 2 - 1;
-    const z = (c.z * 2 - 1) * chunkAspect + zOffset;
+    const x = worldX + (c.x - 0.5) * width;
+    const z = worldZ + (c.z - 0.5) * depth;
     const nh = sampleHeight(heightmap, c.x, c.z); // normalized height, relief applied at draw time
     return { el, nh, x, z, world: new THREE.Vector3(x, nh, z) };
   });
