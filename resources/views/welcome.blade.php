@@ -17,7 +17,7 @@
             overflow: hidden; white-space: nowrap;
             font-weight: 700; font-size: 15px; letter-spacing: 0.06em;
         }
-        .ticker-track { display: inline-block; padding-left: 100%; animation: tick 32s linear infinite; }
+        .ticker-track { display: inline-block; padding-left: 100%; animation: tick var(--ticker-duration, 32s) linear infinite; }
         @keyframes tick { to { transform: translateX(-100%); } }
         @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; padding-left: 0; } }
 
@@ -87,7 +87,7 @@
             color: inherit; text-decoration: none;
             transition: background 120ms;
         }
-        .event-row:hover { background: var(--surface); padding-left: 12px; padding-right: 12px; margin: 0 -12px; }
+        .event-row:hover { background: var(--surface); color: var(--fg); padding-left: 12px; padding-right: 12px; margin: 0 -12px; }
         .event-date { font-family: var(--font-display); color: var(--accent); line-height: 1; }
         .event-date .day { font-size: 40px; line-height: 1; }
         .event-date .month-dow { font-size: 14px; letter-spacing: 0.1em; }
@@ -156,7 +156,7 @@
             </p>
             <div class="hero-cta-row">
                 <a href="#events" class="btn btn-primary">SEE WHAT'S COMING UP →</a>
-                <a href="#host" class="btn btn-secondary">› host an event</a>
+                <a href="{{ route('host') }}" class="btn btn-secondary">› host an event</a>
             </div>
         </div>
         <div class="meta-card">
@@ -184,13 +184,14 @@
 
 {{-- Ticker --}}
 @if($nextMeetup || $upcomingMeetups->count())
+@php
+    $allMeetups = ($nextMeetup ? collect([$nextMeetup])->merge($upcomingMeetups) : $upcomingMeetups)->take(3);
+    $tickerItems = $allMeetups->map(fn($m) => strtoupper($m->title) . ' · ' . strtoupper($m->starts_at->format('M j')) . ' · ' . strtoupper($m->location))->implode('  /  ');
+    $tickerLine = $tickerItems . '  /  ';
+    $tickerDuration = max(30, round(strlen($tickerLine) * 0.15)) . 's';
+@endphp
 <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-        @php
-            $allMeetups = $nextMeetup ? collect([$nextMeetup])->merge($upcomingMeetups) : $upcomingMeetups;
-            $tickerItems = $allMeetups->map(fn($m) => strtoupper($m->title) . ' · ' . strtoupper($m->starts_at->format('M j')) . ' · ' . strtoupper($m->location))->implode('  /  ');
-            $tickerLine = $tickerItems . '  /  ';
-        @endphp
+    <div class="ticker-track" style="--ticker-duration: {{ $tickerDuration }}">
         {{ str_repeat($tickerLine, 3) }}
     </div>
 </div>
@@ -226,7 +227,7 @@
                     </div>
                 @endif
                 <div class="featured-footer">
-                    <a href="#" class="btn btn-primary">
+                    <a href="{{ route('events.show', $nextMeetup->slug) }}" class="btn btn-primary">
                         RSVP · {{ $nextMeetup->rsvps->count() }} GOING
                     </a>
                     <span class="featured-cap">free · all levels welcome</span>
@@ -255,11 +256,11 @@
         @if($upcomingMeetups->count())
         <div class="section-head">
             <h2><span style="color: var(--accent);">›</span> on the calendar</h2>
-            <a href="#" style="color: var(--accent); font-size: 13px; text-decoration: none;">view all →</a>
+            <a href="{{ route('events.index') }}" style="color: var(--accent); font-size: 13px; text-decoration: none;">view all →</a>
         </div>
         <div>
             @foreach($upcomingMeetups as $meetup)
-            <a href="#" class="event-row">
+            <a href="{{ route('events.show', $meetup->slug) }}" class="event-row">
                 <div class="event-date">
                     <div class="day">{{ $meetup->starts_at->format('d') }}</div>
                     <div class="month-dow">{{ strtoupper($meetup->starts_at->format('M')) }} · {{ strtoupper($meetup->starts_at->format('D')) }}</div>
@@ -355,7 +356,7 @@
                     You pick the date, the room, and what you want to talk about. We bring the people.
                 </p>
             </div>
-            <a href="#" class="btn btn-primary">SUBMIT AN EVENT →</a>
+            <a href="{{ route('host') }}" class="btn btn-primary">SUBMIT AN EVENT →</a>
         </div>
     </div>
 </div>

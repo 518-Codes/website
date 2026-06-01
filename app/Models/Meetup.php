@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['title', 'slug', 'description', 'location', 'latitude', 'longitude', 'starts_at', 'ends_at', 'status'])]
+#[Fillable(['title', 'slug', 'description', 'what_to_expect', 'location', 'latitude', 'longitude', 'starts_at', 'ends_at', 'status', 'contact_email'])]
 class Meetup extends Model
 {
     /** @use HasFactory<MeetupFactory> */
@@ -37,6 +37,11 @@ class Meetup extends Model
     public function rsvps(): HasMany
     {
         return $this->hasMany(Rsvp::class);
+    }
+
+    public function scheduleItems(): HasMany
+    {
+        return $this->hasMany(MeetupScheduleItem::class)->orderBy('order');
     }
 
     public function images(): MorphMany

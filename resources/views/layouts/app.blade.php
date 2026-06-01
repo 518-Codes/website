@@ -205,10 +205,10 @@
     </a>
     <ul class="nav-links">
         <li><a href="/events" @class(['active' => request()->is('events*')])>events</a></li>
-        <li><a href="#about">about</a></li>
-        <li><a href="#host">host</a></li>
+        <li><a href="/#about">about</a></li>
+        <li><a href="{{ route('host') }}" @class(['active' => request()->is('host')])>host</a></li>
     </ul>
-    <a href="#subscribe" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
+    <a href="#" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
         SUBSCRIBE →
     </a>
 </nav>
@@ -216,7 +216,7 @@
 {{ $slot ?? '' }}
 @yield('content')
 
-<section class="terminal-section" aria-label="Interactive terminal">
+<section class="terminal-section" aria-label="Interactive terminal" style="margin-top: 64px;">
     @livewire('terminal')
 </section>
 
@@ -231,7 +231,7 @@
         </div>
         <div>
             <div class="footer-col-title">community</div>
-            @foreach(['events' => '/events', 'host an event' => '#host', 'code of conduct' => '#', 'about' => '#about'] as $label => $href)
+            @foreach(['events' => '/events', 'host an event' => route('host'), 'code of conduct' => '#', 'about' => '/#about'] as $label => $href)
                 <a href="{{ $href }}" class="footer-link">› {{ $label }}</a>
             @endforeach
         </div>

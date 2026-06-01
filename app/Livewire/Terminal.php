@@ -91,6 +91,8 @@ class Terminal extends Component
         match ($command) {
             'help' => $this->cmdHelp(),
             'events' => $this->cmdEvents(),
+            'directions' => $this->cmdDirections($args),
+            'host' => $this->cmdHost(),
             'whois' => $this->cmdWhois(),
             'rsvp' => $this->cmdRsvp($args),
             'clear' => $this->cmdClear(),
@@ -104,6 +106,8 @@ class Terminal extends Component
             ['type' => 'output', 'text' => 'available commands:'],
             ['type' => 'output', 'text' => '  help              show this message'],
             ['type' => 'output', 'text' => '  events            list upcoming events'],
+            ['type' => 'output', 'text' => '  directions <slug> get directions to an event'],
+            ['type' => 'output', 'text' => '  host              propose an event'],
             ['type' => 'output', 'text' => '  rsvp <slug>       RSVP to an event'],
             ['type' => 'output', 'text' => '  whois             about 518.codes'],
             ['type' => 'output', 'text' => '  clear             clear the terminal'],
@@ -143,6 +147,15 @@ class Terminal extends Component
         $this->history[] = ['type' => 'dim', 'text' => $meetups->count().' event(s) · rsvp <slug> to register'];
     }
 
+    private function cmdHost(): void
+    {
+        $this->history[] = ['type' => 'output', 'text' => '// propose an event'];
+        $this->history[] = ['type' => 'output', 'text' => '   Got a topic, a venue, or just a Tuesday?'];
+        $this->history[] = ['type' => 'output', 'text' => '   Submit a one-paragraph proposal and we\'ll handle the rest.'];
+        $this->history[] = ['type' => 'dim', 'text' => str_repeat('─', 72)];
+        $this->history[] = ['type' => 'link', 'text' => route('host')];
+    }
+
     private function cmdWhois(): void
     {
         $lines = [
@@ -160,6 +173,35 @@ class Terminal extends Component
         foreach ($lines as $line) {
             $this->history[] = $line;
         }
+    }
+
+    private function cmdDirections(string $slug): void
+    {
+        if ($slug === '') {
+            $this->history[] = ['type' => 'error', 'text' => 'Usage: directions <event-slug>  (run `events` to see slugs)'];
+
+            return;
+        }
+
+        $meetup = Meetup::where('slug', $slug)
+            ->where('status', MeetupStatus::Published)
+            ->first();
+
+        if (! $meetup) {
+            $this->history[] = ['type' => 'error', 'text' => 'No published event found with slug "'.$slug.'".'];
+            $this->history[] = ['type' => 'dim', 'text' => 'Run `events` to see available slugs.'];
+
+            return;
+        }
+
+        $mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination='.urlencode($meetup->location);
+
+        $this->history[] = ['type' => 'output', 'text' => '// directions to: '.$meetup->title];
+        $this->history[] = ['type' => 'output', 'text' => '   '.$meetup->location];
+        $this->history[] = ['type' => 'output', 'text' => '   '.$meetup->starts_at->format('D, M j, Y · g:i a')];
+        $this->history[] = ['type' => 'dim', 'text' => str_repeat('─', 72)];
+        $this->history[] = ['type' => 'link', 'text' => $mapsUrl];
+        $this->history[] = ['type' => 'dim', 'text' => '↑ open in browser for turn-by-turn directions'];
     }
 
     private function cmdRsvp(string $slug): void

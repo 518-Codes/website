@@ -20,6 +20,8 @@
                 <div class="term-line term-error">✗ {{ $line['text'] }}</div>
             @elseif ($line['type'] === 'success')
                 <div class="term-line term-success">{{ $line['text'] }}</div>
+            @elseif ($line['type'] === 'link')
+                <div class="term-line term-success"><a href="{{ $line['text'] }}" target="_blank" rel="noopener" style="color:inherit;">{{ $line['text'] }}</a></div>
             @elseif ($line['type'] === 'accent')
                 <div class="term-line term-accent">{{ $line['text'] }}</div>
             @elseif ($line['type'] === 'dim')
@@ -92,7 +94,6 @@ function terminalShell() {
                     this.$refs.body.scrollTop = this.$refs.body.scrollHeight;
                 });
             });
-            this.$refs.input?.focus();
         }
     }
 }

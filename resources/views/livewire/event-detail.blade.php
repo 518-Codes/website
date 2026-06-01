@@ -42,6 +42,12 @@
         .detail-body main h2:first-child { margin-top: 0; }
         .detail-body main h2 .pr { color: var(--accent); margin-right: 8px; }
         .detail-body main p { font-size: 17px; line-height: 1.7; color: var(--fg-dim); max-width: 72ch; margin: 0 0 16px; }
+        .prose { font-size: 17px; line-height: 1.7; color: var(--fg-dim); max-width: 72ch; }
+        .prose p { margin: 0 0 16px; }
+        .prose strong { color: var(--fg); }
+        .prose a { color: var(--accent); }
+        .prose ul, .prose ol { padding-left: 24px; margin: 0 0 16px; }
+        .prose li { margin-bottom: 6px; }
 
         .schedule { border: 2px solid var(--fg); }
         .schedule-row { display: grid; grid-template-columns: 80px 1fr; padding: 12px 16px; border-bottom: 1px solid var(--hairline); align-items: baseline; }
@@ -50,26 +56,30 @@
         .schedule-what b { display: block; font-size: 14px; margin-bottom: 2px; }
         .schedule-what span { color: var(--fg-dim); font-size: 12px; }
 
-        .going-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 12px; }
-        .going-av {
-            aspect-ratio: 1; border: 1.5px solid var(--fg-dim); background: var(--surface);
-            display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--fg-dim);
+        .roster { border: 2px solid var(--fg); margin-top: 12px; }
+        .roster-header {
+            display: grid; grid-template-columns: 36px 48px 1fr 120px;
+            padding: 6px 14px; background: var(--fg); color: var(--bg);
+            font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+            gap: 12px;
         }
-        .going-more { border-color: var(--accent); color: var(--accent); font-weight: 700; }
-
-        .where-card { border: 2px solid var(--fg); padding: 18px; box-shadow: 4px 4px 0 0 var(--fg); background: var(--surface); margin-bottom: 24px; }
-        .where-card-title { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-dim); margin: 0 0 10px; font-weight: 500; }
-        .ascii-map {
-            border: 2px solid var(--fg); padding: 0; margin-top: 0;
+        .roster-row {
+            display: grid; grid-template-columns: 36px 48px 1fr 120px;
+            padding: 9px 14px; border-bottom: 1px solid var(--hairline);
+            align-items: center; gap: 12px; font-size: 13px;
         }
-        .ascii-map pre {
-            margin: 0; padding: 16px; color: var(--accent); font-size: 10px; line-height: 1.1;
-            background: var(--surface); border-bottom: 2px solid var(--fg);
-            text-shadow: 0 0 4px rgba(94,252,141,0.3); overflow: hidden;
-            font-family: var(--font-mono); white-space: pre;
+        .roster-row:last-child { border-bottom: 0; }
+        .roster-idx { color: var(--fg-mute); font-size: 11px; font-family: var(--font-display); }
+        .roster-badge {
+            font-size: 11px; font-weight: 700; color: var(--bg); background: var(--accent);
+            padding: 1px 6px; letter-spacing: 0.04em; display: inline-block;
         }
-        .ascii-map .addr { padding: 12px 16px; font-size: 13px; color: var(--fg-dim); }
-        .ascii-map .addr b { color: var(--fg); display: block; font-weight: 700; margin-bottom: 4px; }
+        .roster-name { color: var(--fg); }
+        .roster-time { color: var(--fg-mute); font-size: 11px; letter-spacing: 0.04em; text-align: right; }
+        .roster-overflow {
+            padding: 10px 14px; font-size: 12px; color: var(--accent);
+            letter-spacing: 0.06em; border-top: 1px solid var(--hairline);
+        }
 
         @media (max-width: 900px) {
             .detail-header { grid-template-columns: 1fr; }
@@ -158,7 +168,7 @@
                             </button>
                         </div>
                     @endif
-                    <a href="#" class="btn btn-ghost" style="width: 100%; justify-content: center; font-size: 12px;">+ add to calendar</a>
+                    <a href="{{ route('events.ics', $meetup->slug) }}" class="btn btn-ghost" style="width: 100%; justify-content: center; font-size: 12px;">+ add to calendar</a>
                 </div>
             </div>
         </div>
@@ -166,80 +176,77 @@
         {{-- Body --}}
         <div class="detail-body">
             <main>
-                <h2><span class="pr">›</span>what to expect</h2>
-                @foreach (explode("\n\n", $meetup->description) as $paragraph)
-                    @if (trim($paragraph))
-                        <p>{{ trim($paragraph) }}</p>
-                    @endif
-                @endforeach
+                @if ($meetup->what_to_expect)
+                    <h2><span class="pr">›</span>what to expect</h2>
+                    <div class="prose">{!! $meetup->what_to_expect !!}</div>
+                @endif
 
-                <h2><span class="pr">›</span>schedule</h2>
-                <div class="schedule">
-                    @php
-                        $schedule = [
-                            ['t' => $meetup->starts_at->format('g:i'), 'title' => 'Doors open', 'note' => 'Come in, get settled, grab a coffee.'],
-                            ['t' => $meetup->starts_at->copy()->addMinutes(30)->format('g:i'), 'title' => 'Talks & demos', 'note' => 'Half-broken things especially welcome. No slides required.'],
-                            ['t' => $meetup->starts_at->copy()->addMinutes(90)->format('g:i'), 'title' => 'Open discussion', 'note' => 'Drift between tables, ask questions, get unstuck.'],
-                            ['t' => $meetup->ends_at ? $meetup->ends_at->format('g:i') : $meetup->starts_at->copy()->addHours(3)->format('g:i'), 'title' => 'Wrap up', 'note' => 'Hallway track continues wherever the group ends up.'],
-                        ];
-                    @endphp
-                    @foreach ($schedule as $item)
-                        <div class="schedule-row">
-                            <div class="schedule-t">{{ $item['t'] }}</div>
-                            <div class="schedule-what">
-                                <b>{{ $item['title'] }}</b>
-                                <span>{{ $item['note'] }}</span>
+                @if ($meetup->scheduleItems->isNotEmpty())
+                    <h2><span class="pr">›</span>schedule</h2>
+                    <div class="schedule">
+                        @foreach ($meetup->scheduleItems as $item)
+                            <div class="schedule-row">
+                                <div class="schedule-t">{{ $item->time }}</div>
+                                <div class="schedule-what">
+                                    <b>{{ $item->title }}</b>
+                                    @if ($item->note)
+                                        <span>{{ $item->note }}</span>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if ($meetup->images->isNotEmpty())
+                    <h2><span class="pr">›</span>photos</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+                        @foreach ($meetup->images as $image)
+                            <img
+                                src="{{ \Illuminate\Support\Facades\Storage::url($image->path) }}"
+                                alt="{{ $image->alt ?? $meetup->title }}"
+                                style="width: 100%; aspect-ratio: 4/3; object-fit: cover; border: 2px solid var(--fg);"
+                            >
+                        @endforeach
+                    </div>
+                @endif
 
                 <h2><span class="pr">›</span>who's going</h2>
                 @php
                     $rsvps = $meetup->rsvps;
-                    $shown = $rsvps->take(16);
-                    $overflow = $rsvps->count() - 16;
+                    $shown = $rsvps->take(20);
+                    $overflow = $rsvps->count() - 20;
                 @endphp
                 @if ($rsvps->isEmpty())
                     <p style="color: var(--fg-mute); font-size: 14px;">No RSVPs yet. Be the first.</p>
                 @else
-                    <div class="going-grid">
-                        @foreach ($shown as $rsvp)
-                            <div class="going-av" title="{{ $rsvp->name }}">
-                                {{ strtoupper(substr($rsvp->name, 0, 1)) }}{{ strtoupper(substr(strstr($rsvp->name, ' '), 1, 1)) }}
+                    <div class="roster">
+                        <div class="roster-header">
+                            <span>#</span>
+                            <span>id</span>
+                            <span>name</span>
+                            <span style="text-align:right;">joined</span>
+                        </div>
+                        @foreach ($shown as $i => $rsvp)
+                            @php
+                                $initials = strtoupper(substr($rsvp->name, 0, 1))
+                                    . strtoupper(substr(strstr($rsvp->name, ' '), 1, 1));
+                            @endphp
+                            <div class="roster-row">
+                                <span class="roster-idx">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                                <span><span class="roster-badge">{{ $initials }}</span></span>
+                                <span class="roster-name">{{ $rsvp->name }}</span>
+                                <span class="roster-time">{{ $rsvp->created_at->diffForHumans() }}</span>
                             </div>
                         @endforeach
                         @if ($overflow > 0)
-                            <div class="going-av going-more">+{{ $overflow }}</div>
+                            <div class="roster-overflow">+ {{ $overflow }} more going</div>
                         @endif
                     </div>
                 @endif
             </main>
 
-            <aside>
-                <div class="where-card">
-                    <div class="where-card-title">// where</div>
-                    <div style="font-size: 14px; color: var(--fg-dim); line-height: 1.6;">
-                        {{ $meetup->location }}
-                    </div>
-                </div>
-
-                <div class="ascii-map">
-                    <pre aria-hidden="true">   ─────────────────────────────────
-              MAIN ST
-
-    ●═════[ {{ Str::limit($meetup->location, 16) }} ]═════●
-    │        · venue ·               │
-    ●─────────────────────────────────●
-
-        BROADWAY
-   ─────────────────────────────────</pre>
-                    <div class="addr">
-                        <b>{{ $meetup->location }}</b>
-                        {{ $meetup->starts_at->format('D, M j · g:i a') }}
-                    </div>
-                </div>
-            </aside>
+            <aside></aside>
         </div>
     </div>
 </div>

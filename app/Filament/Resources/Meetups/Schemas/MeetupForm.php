@@ -41,6 +41,11 @@ class MeetupForm
 
                 RichEditor::make('description')
                     ->required()
+                    ->helperText('Short blurb shown on cards and the event header.')
+                    ->columnSpanFull(),
+
+                RichEditor::make('what_to_expect')
+                    ->helperText('Optional longer body text shown in the "What to expect" section on the detail page.')
                     ->columnSpanFull(),
 
                 TextInput::make('location')
@@ -84,10 +89,46 @@ class MeetupForm
                     ->required()
                     ->default(MeetupStatus::Draft->value),
 
+                TextInput::make('contact_email')
+                    ->email()
+                    ->label('Organiser email')
+                    ->helperText('Populated automatically from host submissions.')
+                    ->columnSpanFull(),
+
                 Select::make('tags')
                     ->relationship('tags', 'name')
                     ->multiple()
                     ->preload(),
+            ]),
+
+            Section::make('Schedule')->schema([
+                Repeater::make('scheduleItems')
+                    ->relationship()
+                    ->schema([
+                        TextInput::make('time')
+                            ->label('Time')
+                            ->placeholder('7:00 PM')
+                            ->required()
+                            ->maxLength(10),
+
+                        TextInput::make('title')
+                            ->required()
+                            ->columnSpan(2),
+
+                        TextInput::make('note')
+                            ->label('Note (optional)')
+                            ->columnSpan(3),
+
+                        TextInput::make('order')
+                            ->numeric()
+                            ->default(0)
+                            ->hidden(),
+                    ])
+                    ->columns(6)
+                    ->defaultItems(0)
+                    ->orderColumn('order')
+                    ->reorderable()
+                    ->columnSpanFull(),
             ]),
 
             Section::make('Images')->schema([
@@ -109,6 +150,7 @@ class MeetupForm
                             ->hidden(),
                     ])
                     ->columns(2)
+                    ->defaultItems(0)
                     ->columnSpanFull(),
             ]),
         ]);

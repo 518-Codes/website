@@ -27,7 +27,7 @@
             color: inherit; text-decoration: none;
             transition: background 120ms;
         }
-        .event-row:hover { background: var(--surface); padding-left: 12px; padding-right: 12px; margin: 0 -12px; }
+        .event-row:hover { background: var(--surface); color: var(--fg); padding-left: 12px; padding-right: 12px; margin: 0 -12px; }
         .event-date { font-family: var(--font-display); color: var(--accent); line-height: 1; }
         .event-date .day { font-size: 40px; line-height: 1; }
         .event-date .month-dow { font-size: 14px; letter-spacing: 0.1em; }

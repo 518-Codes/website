@@ -22,7 +22,7 @@ class EventDetail extends Component
 
     public function mount(string $slug): void
     {
-        $this->meetup = Meetup::with(['tags', 'rsvps'])
+        $this->meetup = Meetup::with(['tags', 'rsvps', 'scheduleItems', 'images'])
             ->where('slug', $slug)
             ->where('status', MeetupStatus::Published)
             ->firstOrFail();
