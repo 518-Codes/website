@@ -20,3 +20,18 @@ test('region sandbox static assets are servable', function () {
         ->and(public_path('region-sandbox/cities.json'))->toBeReadableFile()
         ->and(public_path('region-sandbox/fallback.jpg'))->toBeReadableFile();
 });
+
+test('homepage panel wires the events endpoint', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('data-events-endpoint', false)
+        ->assertSee('/api/map-events', false);
+});
+
+test('map page wires the events endpoint and controls', function () {
+    $this->get('/map')
+        ->assertOk()
+        ->assertSee('data-events-endpoint', false)
+        ->assertSee('ctl-events', false)
+        ->assertSee('ctl-markerHorizon', false);
+});
