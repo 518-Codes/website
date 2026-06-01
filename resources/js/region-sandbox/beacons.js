@@ -4,6 +4,16 @@ import { recencyDays, recencyToSize, countdownLabel } from './events.js';
 
 const SPARKLE_MAX = 24; // particles per sparkling beacon
 
+/** Escape admin-entered text before innerHTML interpolation (text + double-quoted attrs). */
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Build beacon meshes + sparkle emitters + HTML labels for one chunk's event groups.
  * Mirrors createChunkLabels: world Z accounts for the chunk's zOffset; heights use
@@ -127,10 +137,10 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       if (labeled) {
         const more = it.g.events.length - 1;
         const moreTxt = more > 0 ? ` <span class="evt-more">(+${more} more)</span>` : '';
-        it.el.innerHTML = `${it.g.soonest.title}<span class="evt-when">${countdownLabel(days)}</span>${moreTxt}`;
+        it.el.innerHTML = `${escapeHtml(it.g.soonest.title)}<span class="evt-when">${countdownLabel(days)}</span>${moreTxt}`;
         if (more > 0 && !it.popover.dataset.built) {
           it.popover.innerHTML = it.g.events
-            .map((e) => `<a href="${e.url}">${e.title} — ${countdownLabel(recencyDays(e.startsAtMs, nowMs))}</a>`)
+            .map((e) => `<a href="${escapeHtml(e.url)}">${escapeHtml(e.title)} — ${countdownLabel(recencyDays(e.startsAtMs, nowMs))}</a>`)
             .join('');
           it.popover.dataset.built = '1';
         }
@@ -148,6 +158,8 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
         if (behind) {
           it.popover.classList.remove('open');
         }
+      } else {
+        it.popover.classList.remove('open');
       }
     }
   };
