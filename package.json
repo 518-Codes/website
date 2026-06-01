@@ -7,7 +7,8 @@
         "build:sandbox": "bun run scripts/region-sandbox/build-data.ts",
         "build:corridor": "bun run scripts/region-sandbox/build-corridor.ts",
         "build:page": "bun run scripts/region-sandbox/build-page.ts",
-        "dev": "vite"
+        "dev": "vite",
+        "test:js": "bun test resources/js/region-sandbox"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
