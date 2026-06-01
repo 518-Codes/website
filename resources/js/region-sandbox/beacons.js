@@ -14,19 +14,23 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
-/** Vertex-color gradient on a unit cone: bright at the base, dim toward the apex. */
-function applyVerticalGradient(geo) {
-  const pos = geo.attributes.position;
-  const colors = new Float32Array(pos.count * 3);
-  for (let i = 0; i < pos.count; i++) {
-    const t = pos.getY(i) + 0.5;   // 0 at base, 1 at apex (unit cone spans -0.5..+0.5)
-    const b = 1.0 - 0.95 * t;      // 1.0 at base -> 0.05 at apex (strong, visible falloff)
-    colors[i * 3] = b;
-    colors[i * 3 + 1] = b;
-    colors[i * 3 + 2] = b;
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-}
+// Beacon gradient lives in the fragment shader (computed from local height) rather than
+// vertex colors, which did not render reliably through the ASCII post-process pass.
+const BEACON_VERT = `
+  varying float vT;
+  void main(){
+    vT = position.y + 0.5;                 // 0 at base, 1 at apex (unit cone spans -0.5..0.5)
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }`;
+const BEACON_FRAG = `
+  precision highp float;
+  uniform vec3 uColor;
+  uniform float uGlow, uOpacity;
+  varying float vT;
+  void main(){
+    float b = 1.0 - 0.95 * vT;             // bright base -> dim apex
+    gl_FragColor = vec4(uColor * b * uGlow, uOpacity);
+  }`;
 
 /**
  * Build beacon meshes + sparkle emitters + HTML labels for one chunk's event groups.
@@ -50,11 +54,19 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     const baseY = sampleHeight(heightmap, g.x, g.z) * RELIEF;
 
     // Beacon: a slender unit cone (wide base -> point top, an inverted-funnel spire),
-    // scaled per-frame by the size envelope. A vertex-color gradient makes it brighter
-    // at the base and dim toward the top; per-frame glow tints the whole cone.
+    // scaled per-frame by the size envelope. The shader fades it bright-at-base to
+    // dim-at-top; per-frame uGlow scales overall brightness, uOpacity its transparency.
     const beaconGeo = new THREE.ConeGeometry(1, 1, 14, 6);
-    applyVerticalGradient(beaconGeo);
-    const beaconMat = new THREE.MeshBasicMaterial({ color: color.clone(), transparent: true, vertexColors: true });
+    const beaconMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: color.clone() },
+        uGlow: { value: 1.0 },
+        uOpacity: { value: 1.0 },
+      },
+      transparent: true,
+      vertexShader: BEACON_VERT,
+      fragmentShader: BEACON_FRAG,
+    });
     const beacon = new THREE.Mesh(beaconGeo, beaconMat);
     group.add(beacon);
 
@@ -130,12 +142,13 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       const yScale = relief / RELIEF;
       const baseY = it.baseY * yScale;
 
-      // Beacon: stand the unit box up to `height`, centered above the ground point.
+      // Beacon: stand the unit cone up to `height`, base on the ground point. The
+      // shader handles the base->top gradient; uGlow scales brightness per recency.
       it.beacon.visible = true;
       it.beacon.scale.set(size.width, size.height, size.width);
       it.beacon.position.set(it.x, baseY + size.height / 2, it.z);
-      it.beaconMat.opacity = Math.min(1, 0.55 + 0.45 * size.glow);
-      it.beacon.material.color.copy(color).multiplyScalar(Math.min(1, 0.6 + size.glow));
+      it.beaconMat.uniforms.uGlow.value = Math.min(1.5, 0.6 + size.glow);
+      it.beaconMat.uniforms.uOpacity.value = Math.min(1, 0.55 + 0.45 * size.glow);
 
       // Sparkle: a subtle constant stream rising from the base centre outward into a
       // short, randomized dome. Only within the sparkle horizon; density + brightness
