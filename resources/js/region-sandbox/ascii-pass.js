@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const GLYPHS = ' .:-=+*#%@'; // sparse -> dense
+const GLYPHS = ' .:ix+*#%@'; // sparse -> dense; no pure horizontal-line glyphs (- =) that read as bars on vertical features
 const CELL = 3; // screen px per glyph cell (smaller = higher ASCII resolution)
 const ATLAS_CELL = 24; // px per glyph in the atlas texture (kept high for crisp glyphs)
 
