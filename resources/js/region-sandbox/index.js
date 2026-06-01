@@ -5,6 +5,7 @@ import { createControls } from './controls.js';
 import { createAsciiPass } from './ascii-pass.js';
 import { createChunkBeacons } from './beacons.js';
 import { EVENT_DEFAULTS, groupByLocation, projectEventToCorridor } from './events.js';
+import { chunkWorld, pathPoints, projectPointToS, geoToWorld } from './projection.js';
 
 /** Maps a layer name to its handle key on createChunkContent's `handles`. */
 const LAYER_HANDLE = {
@@ -78,12 +79,12 @@ export async function mountRegionSandbox(root) {
       eventsByChunk.get(p.chunkIndex).push({ ...ev, x: p.x, z: p.z });
     }
 
-    const chunkCount = manifest.chunkCount;
-    const chunkAspect = manifest.chunkAspect;
-    const chunkZSpan = 2 * chunkAspect;
-    // Corridor world-z range: north edge -chunkAspect, south edge (2*(N-1)+1)*chunkAspect.
-    const corridorMinZ = -chunkAspect;
-    const corridorMaxZ = (2 * (chunkCount - 1) + 1) * chunkAspect;
+    const projection = manifest.projection;
+    const worldPath = pathPoints(manifest.path.waypoints, projection);
+    // Per-chunk world placement + arc-length position along the path.
+    const chunkWorlds = manifest.chunks.map((c) => chunkWorld(c.bbox, projection));
+    const chunkS = chunkWorlds.map((w) => projectPointToS({ x: w.x, z: w.z }, worldPath));
+    const chunkCount = manifest.chunks.length;
 
     const scene = new THREE.Scene();
     const { key, ambient, stdMaterial, elevMaterial, worldGroup } = createWorld(scene);
@@ -94,9 +95,11 @@ export async function mountRegionSandbox(root) {
 
     // Grid is square-ish per chunk (256 x 94); camera aspect comes from the canvas at resize.
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
-    const controls = createControls(camera, canvas, chunkAspect);
-    controls.setScrubBounds(corridorMinZ, corridorMaxZ);
-    controls.setTarget(chunkAspect); // frame the Capital Region (chunks 0-1) initially
+    const controls = createControls(camera, canvas);
+    controls.setPath(worldPath);
+    // Open framed on the Capital Region (Albany), as before.
+    const albany = geoToWorld(-73.7562, 42.6526, projection);
+    controls.setS(projectPointToS(albany, worldPath));
     const ascii = createAsciiPass(renderer, scene, camera);
 
     // Current control state shared across all chunks; new chunks inherit it on load.
@@ -162,36 +165,30 @@ export async function mountRegionSandbox(root) {
         // A concurrent caller may have finished first.
         if (loaded.has(i)) { return; }
 
+        const world = chunkWorlds[i];
         const content = createChunkContent(chunk.heightmap, chunk.features, {
           stdMaterial,
           elevMaterial,
-          chunkAspect,
+          width: world.w,
+          depth: world.d,
           useElev: settings.elevationOn,
         });
-        content.group.position.z = i * chunkZSpan;
+        content.group.position.set(world.x, 0, world.z);
         applyLayers(content);
         applyLayerGlow(content);
         worldGroup.add(content.group);
 
         const labels = createChunkLabels(labelsEl, chunk.heightmap, chunk.cities, {
-          chunkAspect,
-          zOffset: i * chunkZSpan,
+          width: world.w,
+          depth: world.d,
+          worldX: world.x,
+          worldZ: world.z,
         });
 
         const chunkEvents = eventsByChunk.get(i) ?? [];
-        const groups = groupByLocation(chunkEvents); // each carries chunk-local x,z
         let beacons = null;
-        if (groups.length > 0) {
-          beacons = createChunkBeacons(labelsEl, chunk.heightmap, groups, {
-            chunkAspect,
-            zOffset: i * chunkZSpan,
-            thresholds: eventThresholds,
-            getNowMs: () => Date.now(),
-            reduceMotion,
-          });
-          beacons.group.visible = eventsVisible;
-          worldGroup.add(beacons.group);
-        }
+        // Beacons re-enabled in Phase 3 (projection-based placement).
+        void chunkEvents;
 
         loaded.set(i, { content, labels, beacons });
       } catch (err) {
@@ -201,16 +198,17 @@ export async function mountRegionSandbox(root) {
       }
     }
 
-    /** Ensure the chunks around the camera's z target are loaded (bias south). */
     const stream = () => {
-      const idx = Math.min(chunkCount - 1, Math.max(0, Math.round(controls.target.z / chunkZSpan)));
-      for (let i = idx - 1; i <= idx + 2; i++) {
-        loadChunk(i);
+      const s = controls.getS();
+      let nearest = 0, best = Infinity;
+      for (let i = 0; i < chunkCount; i++) {
+        const d = Math.abs(chunkS[i] - s);
+        if (d < best) { best = d; nearest = i; }
       }
+      for (let i = nearest - 1; i <= nearest + 2; i++) { loadChunk(i); }
     };
 
-    // Initial load: chunks 0, 1, 2.
-    loadChunk(0); loadChunk(1); loadChunk(2);
+    stream();
 
     const resize = () => {
       const w = canvas.clientWidth, h = canvas.clientHeight;
