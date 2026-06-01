@@ -81,25 +81,24 @@ export function groupByLocation(events) {
 }
 
 /**
- * Project an event's lng/lat into the corridor: which chunk + chunk-local [0,1] coords.
- * Returns null if the event lies outside the corridor bbox.
+ * Project an event's lng/lat into the corridor: which chunk (by bbox) + chunk-local [0,1].
+ * Works for both lat-band (mainline) and lng-band (longisland) chunks. Returns null if the
+ * event lies outside every chunk bbox.
  *
  * @param {{lat:number,lng:number}} ev
- * @param {{corridor:{minLng:number,minLat:number,maxLng:number,maxLat:number},chunkCount:number,latSpan?:number}} manifest
+ * @param {{chunks:Array<{index:number,bbox:{minLng:number,minLat:number,maxLng:number,maxLat:number}}>}} manifest
  * @returns {{chunkIndex:number,x:number,z:number}|null}
  */
 export function projectEventToCorridor(ev, manifest) {
-  const c = manifest.corridor;
-  if (ev.lng < c.minLng || ev.lng > c.maxLng || ev.lat < c.minLat || ev.lat > c.maxLat) {
-    return null;
+  for (let i = 0; i < manifest.chunks.length; i++) {
+    const b = manifest.chunks[i].bbox;
+    if (ev.lng >= b.minLng && ev.lng <= b.maxLng && ev.lat >= b.minLat && ev.lat <= b.maxLat) {
+      return {
+        chunkIndex: i,
+        x: (ev.lng - b.minLng) / (b.maxLng - b.minLng),
+        z: (b.maxLat - ev.lat) / (b.maxLat - b.minLat),
+      };
+    }
   }
-  const latSpan = manifest.latSpan ?? (c.maxLat - c.minLat) / manifest.chunkCount;
-  const chunkIndex = Math.min(
-    manifest.chunkCount - 1,
-    Math.max(0, Math.floor((c.maxLat - ev.lat) / latSpan)),
-  );
-  const chunkMaxLat = c.maxLat - chunkIndex * latSpan;
-  const x = (ev.lng - c.minLng) / (c.maxLng - c.minLng);
-  const z = (chunkMaxLat - ev.lat) / latSpan;
-  return { chunkIndex, x, z };
+  return null;
 }

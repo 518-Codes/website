@@ -58,22 +58,26 @@ test('groupByLocation collapses same-location events, soonest first', () => {
   expect(a.z).toBe(0.7);
 });
 
-test('projectEventToCorridor returns chunk + local coords, null when out of bbox', () => {
+test('projectEventToCorridor (v2): finds containing chunk by bbox, local coords, null when out', () => {
   const manifest = {
-    corridor: { minLng: -74.3, minLat: 40.55, maxLng: -73.4, maxLat: 43.2 },
-    chunkCount: 8,
-    latSpan: (43.2 - 40.55) / 8,
+    version: 2,
+    chunks: [
+      // mainline lat-band
+      { index: 0, segment: 'mainline', bbox: { minLng: -74.3, minLat: 42.8, maxLng: -73.4, maxLat: 43.2 } },
+      // long-island lng-band
+      { index: 1, segment: 'longisland', bbox: { minLng: -72.2, minLat: 40.5, maxLng: -71.8, maxLat: 41.2 } },
+    ],
   };
-  // North edge, west edge -> chunk 0, local (0,0).
-  const p = projectEventToCorridor({ lat: 43.2, lng: -74.3 }, manifest);
-  expect(p.chunkIndex).toBe(0);
-  expect(p.x).toBeCloseTo(0, 5);
-  expect(p.z).toBeCloseTo(0, 5);
-  // South-east corner -> last chunk, local (1,1).
-  const se = projectEventToCorridor({ lat: 40.55, lng: -73.4 }, manifest);
-  expect(se.chunkIndex).toBe(7);
-  expect(se.x).toBeCloseTo(1, 5);
-  expect(se.z).toBeCloseTo(1, 5);
-  // Outside the bbox -> null.
+  // Inside the mainline chunk: north-west corner → local (0,0).
+  const m = projectEventToCorridor({ lat: 43.2, lng: -74.3 }, manifest);
+  expect(m.chunkIndex).toBe(0);
+  expect(m.x).toBeCloseTo(0, 5);
+  expect(m.z).toBeCloseTo(0, 5);
+  // Inside the LI chunk (Montauk-ish): south-east → local (1,1).
+  const li = projectEventToCorridor({ lat: 40.5, lng: -71.8 }, manifest);
+  expect(li.chunkIndex).toBe(1);
+  expect(li.x).toBeCloseTo(1, 5);
+  expect(li.z).toBeCloseTo(1, 5);
+  // Outside every chunk → null.
   expect(projectEventToCorridor({ lat: 50, lng: -74 }, manifest)).toBeNull();
 });
