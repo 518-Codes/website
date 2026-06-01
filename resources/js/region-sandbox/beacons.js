@@ -132,6 +132,10 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   const update = function update(camera, w, h, relief) {
     const nowMs = getNowMs();
     color.setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75); // live hue+sat
+    // CSS forms of the live beacon color so the HTML labels match their beacon.
+    const cr = Math.round(color.r * 255), cg = Math.round(color.g * 255), cb = Math.round(color.b * 255);
+    const labelColor = `rgb(${cr}, ${cg}, ${cb})`;
+    const labelGlow = `rgba(${cr}, ${cg}, ${cb}, 0.7)`;
     for (const it of items) {
       const days = recencyDays(it.g.soonest.startsAtMs, nowMs);
       const size = recencyToSize(days, thresholds);
@@ -197,6 +201,8 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
         const more = it.g.events.length - 1;
         const moreTxt = more > 0 ? ` <span class="evt-more">(+${more} more)</span>` : '';
         it.el.innerHTML = `${escapeHtml(it.g.soonest.title)}<span class="evt-when">${countdownLabel(days)}</span>${moreTxt}`;
+        it.el.style.color = labelColor;
+        it.el.style.textShadow = `0 0 8px ${labelGlow}`;
         if (more > 0 && !it.popover.dataset.built) {
           it.popover.innerHTML = it.g.events
             .map((e) => `<a href="${escapeHtml(e.url)}">${escapeHtml(e.title)} — ${countdownLabel(recencyDays(e.startsAtMs, nowMs))}</a>`)
