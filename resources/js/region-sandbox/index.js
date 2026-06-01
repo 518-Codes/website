@@ -186,9 +186,18 @@ export async function mountRegionSandbox(root) {
         });
 
         const chunkEvents = eventsByChunk.get(i) ?? [];
+        const groups = groupByLocation(chunkEvents); // each carries chunk-local x,z
         let beacons = null;
-        // Beacons re-enabled in Phase 3 (projection-based placement).
-        void chunkEvents;
+        if (groups.length > 0) {
+          beacons = createChunkBeacons(labelsEl, chunk.heightmap, groups, {
+            world,
+            thresholds: eventThresholds,
+            getNowMs: () => Date.now(),
+            reduceMotion,
+          });
+          beacons.group.visible = eventsVisible;
+          worldGroup.add(beacons.group);
+        }
 
         loaded.set(i, { content, labels, beacons });
       } catch (err) {
