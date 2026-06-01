@@ -5,6 +5,9 @@ import { createControls } from './controls.js';
 import { createAsciiPass } from './ascii-pass.js';
 import { createChunkBeacons } from './beacons.js';
 import { EVENT_DEFAULTS, groupByLocation, projectEventToCorridor } from './events.js';
+import { chunkWorld, pathPoints, projectPointToS, geoToWorld } from './projection.js';
+import { createEasterEggs, hitTestEggs } from './easter-eggs.js';
+import { createFireworks } from './fireworks.js';
 
 /** Maps a layer name to its handle key on createChunkContent's `handles`. */
 const LAYER_HANDLE = {
@@ -48,6 +51,11 @@ export async function mountRegionSandbox(root) {
     const base = root.dataset.assets;
     const manifest = await fetch(`${base}/corridor/manifest.json`).then((r) => r.json());
 
+    const EGGS = [
+      { id: 'marcy', name: 'Mt Marcy', lat: 44.1126, lng: -73.9237, hue: 0.33 },        // green
+      { id: 'montauk', name: 'Montauk Point', lat: 41.0715, lng: -71.8576, hue: 0.58 }, // cyan
+    ];
+
     // Events are optional: only when a same-origin endpoint is provided. Failures degrade to none.
     const eventsEndpoint = root.dataset.eventsEndpoint;
     let allEvents = [];
@@ -78,15 +86,24 @@ export async function mountRegionSandbox(root) {
       eventsByChunk.get(p.chunkIndex).push({ ...ev, x: p.x, z: p.z });
     }
 
-    const chunkCount = manifest.chunkCount;
-    const chunkAspect = manifest.chunkAspect;
-    const chunkZSpan = 2 * chunkAspect;
-    // Corridor world-z range: north edge -chunkAspect, south edge (2*(N-1)+1)*chunkAspect.
-    const corridorMinZ = -chunkAspect;
-    const corridorMaxZ = (2 * (chunkCount - 1) + 1) * chunkAspect;
+    const projection = manifest.projection;
+    const worldPath = pathPoints(manifest.path.waypoints, projection);
+    // Per-chunk world placement + arc-length position along the path.
+    const chunkWorlds = manifest.chunks.map((c) => chunkWorld(c.bbox, projection));
+    const chunkS = chunkWorlds.map((w) => projectPointToS({ x: w.x, z: w.z }, worldPath));
+    const chunkCount = manifest.chunks.length;
 
     const scene = new THREE.Scene();
     const { key, ambient, stdMaterial, elevMaterial, worldGroup } = createWorld(scene);
+
+    const fireworks = createFireworks(worldGroup, { reduceMotion });
+    // Eggs are placed when their containing chunk loads (need its heightmap); kept here.
+    const eggManagers = []; // { update(camera,w,h,relief,hoveredId), hitMeshes, items }
+    const eggHitMeshes = [];
+    const placedEggs = new Set(); // eggs persist across chunk eviction; place each once
+    let hoveredEggId = null; // set by the canvas pointermove raycast below
+    let hoveredBeaconKey = null; // hovering a beacon previews its sparkles ("close-by")
+    const hoverRay = new THREE.Raycaster();
 
     const labelsEl = root.querySelector('.region-labels');
 
@@ -94,9 +111,11 @@ export async function mountRegionSandbox(root) {
 
     // Grid is square-ish per chunk (256 x 94); camera aspect comes from the canvas at resize.
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
-    const controls = createControls(camera, canvas, chunkAspect);
-    controls.setScrubBounds(corridorMinZ, corridorMaxZ);
-    controls.setTarget(chunkAspect); // frame the Capital Region (chunks 0-1) initially
+    const controls = createControls(camera, canvas);
+    controls.setPath(worldPath);
+    // Open framed on the Capital Region (Albany), as before.
+    const albany = geoToWorld(-73.7562, 42.6526, projection);
+    controls.setS(projectPointToS(albany, worldPath));
     const ascii = createAsciiPass(renderer, scene, camera);
 
     // Current control state shared across all chunks; new chunks inherit it on load.
@@ -162,20 +181,24 @@ export async function mountRegionSandbox(root) {
         // A concurrent caller may have finished first.
         if (loaded.has(i)) { return; }
 
+        const world = chunkWorlds[i];
         const content = createChunkContent(chunk.heightmap, chunk.features, {
           stdMaterial,
           elevMaterial,
-          chunkAspect,
+          width: world.w,
+          depth: world.d,
           useElev: settings.elevationOn,
         });
-        content.group.position.z = i * chunkZSpan;
+        content.group.position.set(world.x, 0, world.z);
         applyLayers(content);
         applyLayerGlow(content);
         worldGroup.add(content.group);
 
         const labels = createChunkLabels(labelsEl, chunk.heightmap, chunk.cities, {
-          chunkAspect,
-          zOffset: i * chunkZSpan,
+          width: world.w,
+          depth: world.d,
+          worldX: world.x,
+          worldZ: world.z,
         });
 
         const chunkEvents = eventsByChunk.get(i) ?? [];
@@ -183,14 +206,26 @@ export async function mountRegionSandbox(root) {
         let beacons = null;
         if (groups.length > 0) {
           beacons = createChunkBeacons(labelsEl, chunk.heightmap, groups, {
-            chunkAspect,
-            zOffset: i * chunkZSpan,
+            world,
             thresholds: eventThresholds,
             getNowMs: () => Date.now(),
             reduceMotion,
           });
           beacons.group.visible = eventsVisible;
           worldGroup.add(beacons.group);
+        }
+
+        for (const egg of EGGS) {
+          const p = projectEventToCorridor({ lat: egg.lat, lng: egg.lng }, manifest);
+          if (!p || p.chunkIndex !== i) { continue; }
+          if (placedEggs.has(egg.id)) { continue; } // eggs persist; don't re-create on reload
+          placedEggs.add(egg.id);
+          const mgr = createEasterEggs(worldGroup, [{
+            id: egg.id, name: egg.name, x: world.x, z: world.z, w: world.w, d: world.d,
+            localX: p.x, localZ: p.z, heightmap: chunk.heightmap, hue: egg.hue,
+          }], { thresholds: eventThresholds, labelsEl });
+          eggManagers.push(mgr);
+          eggHitMeshes.push(...mgr.hitMeshes);
         }
 
         loaded.set(i, { content, labels, beacons });
@@ -201,16 +236,39 @@ export async function mountRegionSandbox(root) {
       }
     }
 
-    /** Ensure the chunks around the camera's z target are loaded (bias south). */
-    const stream = () => {
-      const idx = Math.min(chunkCount - 1, Math.max(0, Math.round(controls.target.z / chunkZSpan)));
-      for (let i = idx - 1; i <= idx + 2; i++) {
-        loadChunk(i);
+    // Free a chunk's geometry/materials/DOM (terrain + features + labels + beacons).
+    // Easter eggs live on worldGroup (not the chunk group) and persist.
+    const evictChunk = (i) => {
+      const entry = loaded.get(i);
+      if (!entry) { return; }
+      worldGroup.remove(entry.content.group);
+      entry.content.dispose();
+      entry.labels.destroy();
+      if (entry.beacons) {
+        worldGroup.remove(entry.beacons.group);
+        entry.beacons.dispose();
       }
+      loaded.delete(i);
     };
 
-    // Initial load: chunks 0, 1, 2.
-    loadChunk(0); loadChunk(1); loadChunk(2);
+    const stream = () => {
+      const s = controls.getS();
+      let nearest = 0, best = Infinity;
+      for (let i = 0; i < chunkCount; i++) {
+        const d = Math.abs(chunkS[i] - s);
+        if (d < best) { best = d; nearest = i; }
+      }
+      for (let i = nearest - 1; i <= nearest + 2; i++) { loadChunk(i); }
+      // Evict chunks outside a slightly wider keep-window so resident memory stays
+      // bounded (~6 chunks) no matter how far you pan — terrain+feature geometry is heavy.
+      const toEvict = [];
+      for (const i of loaded.keys()) {
+        if (i < nearest - 2 || i > nearest + 3) { toEvict.push(i); }
+      }
+      for (const i of toEvict) { evictChunk(i); }
+    };
+
+    stream();
 
     const resize = () => {
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -232,11 +290,60 @@ export async function mountRegionSandbox(root) {
       const w = canvas.clientWidth, h = canvas.clientHeight;
       for (const { labels, beacons } of loaded.values()) {
         labels.update(camera, w, h, settings.relief);
-        if (beacons) { beacons.update(camera, w, h, settings.relief); }
+        if (beacons) { beacons.update(camera, w, h, settings.relief, hoveredBeaconKey); }
       }
+      for (const mgr of eggManagers) { mgr.update(camera, w, h, settings.relief, hoveredEggId); }
+      fireworks.update(1 / 60);
       ascii.render();
     };
     tick();
+
+    // Hover: raycast on move so the egg's name label shows (and the cursor hints clickable).
+    canvas.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const ndc = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
+      };
+      hoveredEggId = hitTestEggs(ndc, camera, eggHitMeshes);
+      // Beacon hover (previews sparkles); only when events are shown. Hit-volumes are
+      // gathered from currently-loaded chunks so eviction never leaves stale references.
+      hoveredBeaconKey = null;
+      if (eventsVisible) {
+        const beaconHits = [];
+        for (const { beacons } of loaded.values()) {
+          if (beacons) { beaconHits.push(...beacons.hitMeshes); }
+        }
+        if (beaconHits.length) {
+          hoverRay.setFromCamera(ndc, camera);
+          const bHit = hoverRay.intersectObjects(beaconHits, false);
+          hoveredBeaconKey = bHit.length ? bHit[0].object.userData.beaconKey : null;
+        }
+      }
+      canvas.style.cursor = (hoveredEggId || hoveredBeaconKey) ? 'pointer' : '';
+    });
+
+    // Easter-egg clicks: a pointerup that didn't drag → raycast against egg hit meshes.
+    let downX = 0, downY = 0, downT = 0;
+    canvas.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; downT = performance.now(); });
+    canvas.addEventListener('pointerup', (e) => {
+      const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
+      if (moved > 6 || performance.now() - downT > 500) { return; } // a drag, not a click
+      const rect = canvas.getBoundingClientRect();
+      const ndc = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
+      };
+      const id = hitTestEggs(ndc, camera, eggHitMeshes);
+      if (!id) { return; }
+      const egg = EGGS.find((g) => g.id === id);
+      const mgr = eggManagers.find((m) => m.hitMeshes.some((h) => h.userData.eggId === id));
+      const target = mgr && mgr.items.find((it) => it.hit.userData.eggId === id);
+      if (egg && target) {
+        const baseY = target.baseNh * 0.35 * (settings.relief / 0.35);
+        fireworks.spawn({ x: target.wx, y: baseY + eventThresholds.easterEggSize, z: target.wz }, egg.hue);
+      }
+    });
 
     // teardown on visibility loss
     const vis = new IntersectionObserver(([e]) => {
@@ -303,6 +410,7 @@ export async function mountRegionSandbox(root) {
       setBeaconHue(v) { eventThresholds.beaconHue = v; },
       setBeaconSaturation(v) { eventThresholds.beaconSaturation = v; },
       setBeaconCone(on) { eventThresholds.beaconCone = on; },
+      setEasterEggSize(v) { eventThresholds.easterEggSize = v; },
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
@@ -340,6 +448,7 @@ export async function mountRegionSandbox(root) {
           beaconHue: eventThresholds.beaconHue,
           beaconSaturation: eventThresholds.beaconSaturation,
           beaconCone: eventThresholds.beaconCone,
+          easterEggSize: eventThresholds.easterEggSize,
           ...glow,
         };
       },

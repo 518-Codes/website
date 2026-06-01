@@ -65,29 +65,74 @@ export function createWorld(scene) {
   return { key, ambient, stdMaterial, elevMaterial, worldGroup };
 }
 
-/** Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1]. */
+/**
+ * Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1].
+ * Bilinear, so draped features hug the interpolated terrain surface instead of
+ * snapping to the nearest grid cell (nearest-neighbor floats lines off slopes).
+ */
 export function sampleHeight(heightmap, nx, nz) {
   const { width, height, data } = heightmap;
-  const cx = Math.min(width - 1, Math.max(0, Math.round(nx * (width - 1))));
-  const cz = Math.min(height - 1, Math.max(0, Math.round(nz * (height - 1))));
-  return data[cz * width + cx];
+  const fx = Math.min(width - 1, Math.max(0, nx * (width - 1)));
+  const fz = Math.min(height - 1, Math.max(0, nz * (height - 1)));
+  const x0 = Math.floor(fx), z0 = Math.floor(fz);
+  const x1 = Math.min(width - 1, x0 + 1), z1 = Math.min(height - 1, z0 + 1);
+  const tx = fx - x0, tz = fz - z0;
+  const h00 = data[z0 * width + x0], h10 = data[z0 * width + x1];
+  const h01 = data[z1 * width + x0], h11 = data[z1 * width + x1];
+  const top = h00 + (h10 - h00) * tx;
+  const bottom = h01 + (h11 - h01) * tx;
+  return top + (bottom - top) * tz;
+}
+
+/**
+ * Clip a 2-D segment a→b (each `[nx, nz]`) to the unit box [0,1]². Returns the clipped
+ * `[start, end]` endpoints, or null if the segment is entirely outside.
+ *
+ * Features are baked with full way geometry that overruns the chunk's band, so a road
+ * near a boundary lands in both adjacent chunks; the out-of-band copy gets a clamped
+ * (wrong) draped height and renders as a ghost. Clipping makes each chunk draw only the
+ * portion it owns. (Liang–Barsky.)
+ */
+export function clipSegmentUnitBox(a, b) {
+  let t0 = 0, t1 = 1;
+  const dx = b[0] - a[0], dz = b[1] - a[1];
+  const p = [-dx, dx, -dz, dz];
+  const q = [a[0], 1 - a[0], a[1], 1 - a[1]];
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) {
+      if (q[i] < 0) { return null; } // parallel to an edge and outside it
+    } else {
+      const r = q[i] / p[i];
+      if (p[i] < 0) {
+        if (r > t1) { return null; }
+        if (r > t0) { t0 = r; }
+      } else {
+        if (r < t0) { return null; }
+        if (r < t1) { t1 = r; }
+      }
+    }
+  }
+  return [
+    [a[0] + t0 * dx, a[1] + t0 * dz],
+    [a[0] + t1 * dx, a[1] + t1 * dz],
+  ];
 }
 
 /**
  * Builds a single chunk's content (terrain mesh + batched features) into a group.
  * Does NOT add the group to the scene — the chunk manager positions it and adds it
- * to the worldGroup. Terrain spans X [-1,1] and Z [-chunkAspect, chunkAspect].
+ * to the worldGroup. Geometry is centered on the local origin.
  *
  * @param {{width:number,height:number,data:number[]}} heightmap globally-normalized heights
  * @param {Array} features local-normalized feature coords
- * @param {{ stdMaterial: THREE.Material, elevMaterial: THREE.Material, chunkAspect: number, useElev: boolean }} opts
+ * @param {{ stdMaterial: THREE.Material, elevMaterial: THREE.Material, width: number, depth: number, useElev: boolean }} opts
  * @returns {{ group: THREE.Group, terrain: THREE.Mesh, handles: { roadMajor?: THREE.LineSegments, roadSub?: THREE.LineSegments, waterRiver?: THREE.LineSegments, waterStream?: THREE.LineSegments, waterArea?: THREE.Mesh }, dispose: () => void }}
  */
-export function createChunkContent(heightmap, features, { stdMaterial, elevMaterial, chunkAspect, useElev }) {
+export function createChunkContent(heightmap, features, { stdMaterial, elevMaterial, width: worldW, depth: worldD, useElev }) {
   const { width, height, data } = heightmap;
 
-  // Plane spans [-1,1] in X and [-chunkAspect, chunkAspect] in Z; segments = grid cells.
-  const geo = new THREE.PlaneGeometry(2, 2 * chunkAspect, width - 1, height - 1);
+  // Plane spans worldW in X and worldD in Z, centered on local origin; segments = grid cells.
+  const geo = new THREE.PlaneGeometry(worldW, worldD, width - 1, height - 1);
   geo.rotateX(-Math.PI / 2); // lay flat: XZ ground plane
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
@@ -99,7 +144,7 @@ export function createChunkContent(heightmap, features, { stdMaterial, elevMater
   const group = new THREE.Group();
   group.add(terrain);
 
-  const handles = addChunkFeatures(group, heightmap, features, chunkAspect);
+  const handles = addChunkFeatures(group, heightmap, features, worldW, worldD);
 
   // Geometries created for this chunk, for disposal.
   const geometries = [geo];
@@ -118,11 +163,20 @@ export function createChunkContent(heightmap, features, { stdMaterial, elevMater
   return { group, terrain, handles, dispose };
 }
 
+/** Map a local-normalized line vertex [nx,nz] to draped world [x,y,z]. */
+function mapFeaturePoint([nx, nz], heightmap, worldW, worldD) {
+  return [
+    (nx - 0.5) * worldW,
+    sampleHeight(heightmap, nx, nz) * RELIEF + 0.01,
+    (nz - 0.5) * worldD,
+  ];
+}
+
 /**
  * Adds tiered road + water features draped just above the terrain, batched per kind.
- * Coords are local-normalized [0,1]; mapped x=nx*2-1, z=(nz*2-1)*chunkAspect.
+ * Coords are local-normalized [0,1]; mapped x=(nx-0.5)*worldW, z=(nz-0.5)*worldD.
  */
-function addChunkFeatures(group, heightmap, features, chunkAspect) {
+function addChunkFeatures(group, heightmap, features, worldW, worldD) {
   const lineVerts = { 'road-major': [], 'road-sub': [], 'water-river': [], 'water-stream': [] };
 
   const areaPositions = [];
@@ -141,6 +195,13 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
       }
       if (ring.length < 3) { areaSkipped++; continue; }
 
+      // Each area is owned by the chunk containing its centroid, so a ring straddling a
+      // boundary is drawn once (by its owner) instead of ghosting in both neighbours.
+      let cx = 0, cz = 0;
+      for (const [nx, nz] of ring) { cx += nx; cz += nz; }
+      cx /= ring.length; cz /= ring.length;
+      if (cx < 0 || cx > 1 || cz < 0 || cz > 1) { continue; }
+
       const contour = ring.map(([nx, nz]) => new THREE.Vector2(nx, nz));
       let tris;
       try {
@@ -154,9 +215,9 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
       const base = areaPositions.length / 3;
       for (const [nx, nz] of ring) {
         areaPositions.push(
-          nx * 2 - 1,
+          (nx - 0.5) * worldW,
           sampleHeight(heightmap, nx, nz) * RELIEF + 0.005,
-          (nz * 2 - 1) * chunkAspect,
+          (nz - 0.5) * worldD,
         );
       }
       for (const [a, b, c] of tris) {
@@ -167,13 +228,14 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
 
     const target = lineVerts[f.kind];
     if (!target) { continue; }
-    const pts = f.coords.map(([nx, nz]) => [
-      nx * 2 - 1,
-      sampleHeight(heightmap, nx, nz) * RELIEF + 0.01,
-      (nz * 2 - 1) * chunkAspect,
-    ]);
-    for (let i = 0; i + 1 < pts.length; i++) {
-      target.push(pts[i][0], pts[i][1], pts[i][2], pts[i + 1][0], pts[i + 1][1], pts[i + 1][2]);
+    // Clip each segment to the chunk's [0,1] band so only the owned portion is drawn
+    // (and its draped height is sampled in-range, not clamped to a wrong edge value).
+    for (let i = 0; i + 1 < f.coords.length; i++) {
+      const seg = clipSegmentUnitBox(f.coords[i], f.coords[i + 1]);
+      if (!seg) { continue; }
+      const a = mapFeaturePoint(seg[0], heightmap, worldW, worldD);
+      const b = mapFeaturePoint(seg[1], heightmap, worldW, worldD);
+      target.push(a[0], a[1], a[2], b[0], b[1], b[2]);
     }
   }
 

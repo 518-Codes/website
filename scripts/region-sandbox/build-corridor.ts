@@ -1,27 +1,31 @@
 import { mkdir } from 'node:fs/promises';
 import { PNG } from 'pngjs';
-import { CORRIDOR, CHUNK_COUNT, CHUNK_GRID_W, CORRIDOR_CITIES, OUTPUT_DIR, type BBox } from './config';
+import {
+  SEGMENTS, PROJECTION, PATH_WAYPOINTS, REGION_BOUNDARY_LAT,
+  CORRIDOR_CITIES, OUTPUT_DIR, type BBox,
+} from './config';
+import { chunkBBoxesForSegment, regionOf, chunkGridHeight } from './segments';
 import { bboxTileRange } from './tiles';
 import { decodeElevation, downsample } from './terrarium';
+import { bboxPixelRect, cropGrid } from './crop';
 import { projectToScene } from './project';
 import { simplify, type Pt } from './simplify';
 import { parseElements, type RawFeature, type FeatureKind } from './overpass';
 
 const TILE = 256;
 const DEM_ZOOM = 10;
+const GRID_W = 256;
 const CORRIDOR_DIR = `${OUTPUT_DIR}/corridor`;
 
-const latSpan = (CORRIDOR.maxLat - CORRIDOR.minLat) / CHUNK_COUNT;
-const lngSpan = CORRIDOR.maxLng - CORRIDOR.minLng;
-const CHUNK_GRID_H = Math.round(CHUNK_GRID_W * (latSpan / lngSpan));
-
 type Feature = { kind: FeatureKind; coords: Pt[]; closed?: boolean };
-
-function chunkBBox(i: number): BBox {
-  const maxLat = CORRIDOR.maxLat - i * latSpan;
-  const minLat = maxLat - latSpan;
-  return { minLng: CORRIDOR.minLng, minLat, maxLng: CORRIDOR.maxLng, maxLat };
-}
+type ChunkPlan = {
+  globalIndex: number;
+  segment: string;
+  region: string;
+  bbox: BBox;
+  gridH: number;
+  light: boolean;
+};
 
 async function fetchTilePng(z: number, x: number, y: number): Promise<PNG> {
   const url = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
@@ -30,8 +34,13 @@ async function fetchTilePng(z: number, x: number, y: number): Promise<PNG> {
   return PNG.sync.read(Buffer.from(await res.arrayBuffer()));
 }
 
-/** Fetch + downsample a chunk's DEM to a RAW (meters) Float32 grid. */
-async function fetchRawHeightmap(bbox: BBox): Promise<Float32Array> {
+/**
+ * Fetch + downsample a chunk's DEM to a RAW (meters) Float32 grid (GRID_W × gridH).
+ * The tile mosaic is snapped outside the bbox, so it is cropped to the exact bbox
+ * before downsampling — otherwise the heightmap is offset from the bbox (and from the
+ * features, which use the precise bbox) by tens of cells.
+ */
+async function fetchRawHeightmap(bbox: BBox, gridH: number): Promise<Float32Array> {
   const r = bboxTileRange(bbox, DEM_ZOOM);
   const cols = r.maxX - r.minX + 1;
   const rows = r.maxY - r.minY + 1;
@@ -53,24 +62,24 @@ async function fetchRawHeightmap(bbox: BBox): Promise<Float32Array> {
       }
     }
   }
-  return downsample(mosaic, mosaicW, mosaicH, CHUNK_GRID_W, CHUNK_GRID_H);
+
+  const crop = cropGrid(mosaic, mosaicW, mosaicH, bboxPixelRect(bbox, r, DEM_ZOOM, TILE));
+  return downsample(crop.data, crop.w, crop.h, GRID_W, gridH);
 }
 
-/** Linear normalize a grid to [0,1] against a supplied global min/max, rounded to 3 decimals. */
-function normalizeGlobal(grid: Float32Array, min: number, max: number): number[] {
+/** Linear normalize a raw grid to [0,1] against supplied min/max, rounded to 3 decimals. */
+function normalizeAgainst(grid: Float32Array, min: number, max: number): number[] {
   const range = max - min || 1;
   return Array.from(grid, (v) => Math.round(((v - min) / range) * 1000) / 1000);
 }
 
 /**
- * Overpass fetch with a generous server-side + client-side timeout. Mirrors the
- * shared query (major/trunk/primary/secondary, river/canal/stream, natural=water)
- * but allows a longer timeout than the shared helper for the dense metro chunks.
+ * Overpass fetch mirroring the shared query (major/trunk/primary/secondary roads,
+ * river/canal/stream, natural=water). Dense/low areas use the lighter query so Overpass
+ * doesn't 504 and files stay lean.
  */
 async function fetchOverpassChunk(bbox: BBox, timeoutMs: number, light: boolean): Promise<RawFeature[]> {
   const bb = `${bbox.minLat},${bbox.minLng},${bbox.maxLat},${bbox.maxLng}`;
-  // Dense southern (NYC-metro) chunks use a lighter query (drop secondary roads +
-  // streams) so Overpass doesn't 504 and files stay lean; the north keeps full detail.
   const roads = light ? 'motorway|trunk|primary' : 'motorway|trunk|primary|secondary';
   const water = light ? 'river|canal' : 'river|canal|stream';
   const query = `[out:json][timeout:180];
@@ -100,7 +109,7 @@ out geom;`;
   }
 }
 
-/** Fetch a chunk's features with one retry; returns [] + flags failure on repeated error. */
+/** Fetch a chunk's features with retries; returns [] + flags failure on repeated error. */
 async function buildFeatures(bbox: BBox, light: boolean): Promise<{ features: Feature[]; failed: boolean }> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
@@ -128,10 +137,10 @@ async function buildFeatures(bbox: BBox, light: boolean): Promise<{ features: Fe
   return { features: [], failed: true };
 }
 
-/** Cities whose lat falls within [minLat, maxLat), projected to chunk-local coords. */
+/** Cities inside a chunk bbox, projected to chunk-local coords. */
 function citiesForChunk(bbox: BBox): { name: string; x: number; z: number }[] {
   return CORRIDOR_CITIES
-    .filter((c) => c.lat >= bbox.minLat && c.lat < bbox.maxLat)
+    .filter((c) => c.lat >= bbox.minLat && c.lat < bbox.maxLat && c.lng >= bbox.minLng && c.lng < bbox.maxLng)
     .map((c) => {
       const p = projectToScene(c.lng, c.lat, bbox);
       return { name: c.name, x: Math.round(p.x * 1e4) / 1e4, z: Math.round(p.z * 1e4) / 1e4 };
@@ -146,87 +155,75 @@ function countByKind(features: Feature[]): Record<string, number> {
 
 async function main(): Promise<void> {
   await mkdir(CORRIDOR_DIR, { recursive: true });
-  console.log(`Corridor: latSpan=${latSpan.toFixed(4)} lngSpan=${lngSpan.toFixed(4)} chunkGridH=${CHUNK_GRID_H} chunkAspect=${(CHUNK_GRID_H / CHUNK_GRID_W).toFixed(4)}`);
 
-  // Phase 1: raw heightmaps for every chunk + global min/max.
+  // Ordered chunk plan across all segments (mainline first, then long island).
+  const plans: ChunkPlan[] = [];
+  let gi = 0;
+  for (const seg of SEGMENTS) {
+    for (const bbox of chunkBBoxesForSegment(seg)) {
+      const region = regionOf(seg.id, bbox, REGION_BOUNDARY_LAT);
+      const light = seg.id === 'longisland' || bbox.maxLat < 42.5; // dense/low areas use the lighter query
+      plans.push({ globalIndex: gi++, segment: seg.id, region, bbox, gridH: chunkGridHeight(bbox, GRID_W), light });
+    }
+  }
+  console.log(`Planned ${plans.length} chunks across ${SEGMENTS.length} segments.`);
+
+  // Phase 1: raw heightmaps for every chunk + per-region min/max.
   console.log('\nFetching DEM for all chunks…');
   const rawGrids: Float32Array[] = [];
-  let globalMin = Infinity;
-  let globalMax = -Infinity;
-  for (let i = 0; i < CHUNK_COUNT; i++) {
-    const bbox = chunkBBox(i);
-    process.stdout.write(`  chunk ${i} DEM (lat ${bbox.minLat.toFixed(3)}..${bbox.maxLat.toFixed(3)})… `);
-    const grid = await fetchRawHeightmap(bbox);
-    for (const v of grid) {
-      if (v < globalMin) { globalMin = v; }
-      if (v > globalMax) { globalMax = v; }
-    }
+  const regionExtent = new Map<string, { min: number; max: number }>();
+  for (const plan of plans) {
+    process.stdout.write(`  chunk ${plan.globalIndex} [${plan.region}] DEM (lat ${plan.bbox.minLat.toFixed(2)}..${plan.bbox.maxLat.toFixed(2)}, lng ${plan.bbox.minLng.toFixed(2)}..${plan.bbox.maxLng.toFixed(2)})… `);
+    const grid = await fetchRawHeightmap(plan.bbox, plan.gridH);
     rawGrids.push(grid);
+    let e = regionExtent.get(plan.region);
+    if (!e) { e = { min: Infinity, max: -Infinity }; regionExtent.set(plan.region, e); }
+    for (const v of grid) { if (v < e.min) { e.min = v; } if (v > e.max) { e.max = v; } }
     console.log('done');
   }
-  console.log(`Global elevation range: ${globalMin.toFixed(1)}m .. ${globalMax.toFixed(1)}m`);
+  for (const [id, e] of regionExtent) { console.log(`Region ${id}: ${e.min.toFixed(1)}m .. ${e.max.toFixed(1)}m`); }
 
-  // Phase 2: per-chunk features + cities, write chunk files.
+  // Phase 2: features + cities per chunk, write chunk files (normalized per region).
   const manifestChunks: {
-    index: number;
-    file: string;
-    minLat: number;
-    maxLat: number;
-    cityNames: string[];
+    index: number; file: string; segment: string; region: string;
+    bbox: BBox; grid: { width: number; height: number };
+    cities: { name: string; x: number; z: number }[];
   }[] = [];
   const failedChunks: number[] = [];
 
-  for (let i = 0; i < CHUNK_COUNT; i++) {
-    const bbox = chunkBBox(i);
-    const light = bbox.maxLat < 42.5; // dense south (Hudson Valley → NYC) uses the lighter query
-    console.log(`\nChunk ${i} features (lat ${bbox.minLat.toFixed(3)}..${bbox.maxLat.toFixed(3)})${light ? ' [light]' : ' [full]'}…`);
-    if (i > 0) { await new Promise((r) => setTimeout(r, 3000)); } // gentle on Overpass between chunks (avoid 429)
-    const { features, failed } = await buildFeatures(bbox, light);
+  for (const plan of plans) {
+    const i = plan.globalIndex;
+    console.log(`\nChunk ${i} features [${plan.segment}/${plan.region}]${plan.light ? ' [light]' : ' [full]'}…`);
+    if (i > 0) { await new Promise((r) => setTimeout(r, 3000)); } // gentle on Overpass between chunks
+    const { features, failed } = await buildFeatures(plan.bbox, plan.light);
     if (failed) { failedChunks.push(i); }
-    const cities = citiesForChunk(bbox);
-    const data = normalizeGlobal(rawGrids[i], globalMin, globalMax);
+    const cities = citiesForChunk(plan.bbox);
+    const ext = regionExtent.get(plan.region)!;
+    const data = normalizeAgainst(rawGrids[i], ext.min, ext.max);
+    const grid = { width: GRID_W, height: plan.gridH };
 
     const chunk = {
-      index: i,
-      bbox,
-      heightmap: { width: CHUNK_GRID_W, height: CHUNK_GRID_H, data },
-      features,
-      cities,
+      index: i, segment: plan.segment, region: plan.region, bbox: plan.bbox,
+      grid, heightmap: { width: GRID_W, height: plan.gridH, data }, features, cities,
     };
     const file = `chunk-${i}.json`;
     await Bun.write(`${CORRIDOR_DIR}/${file}`, JSON.stringify(chunk));
-
-    const stat = await Bun.file(`${CORRIDOR_DIR}/${file}`).stat();
-    const kb = (stat.size / 1024).toFixed(1);
+    const kb = ((await Bun.file(`${CORRIDOR_DIR}/${file}`).stat()).size / 1024).toFixed(1);
     console.log(`  ${features.length} features ${JSON.stringify(countByKind(features))}, ${cities.length} cities [${cities.map((c) => c.name).join(', ')}], ${kb} KB`);
 
-    manifestChunks.push({
-      index: i,
-      file,
-      minLat: bbox.minLat,
-      maxLat: bbox.maxLat,
-      cityNames: cities.map((c) => c.name),
-    });
+    manifestChunks.push({ index: i, file, segment: plan.segment, region: plan.region, bbox: plan.bbox, grid, cities });
   }
 
   const manifest = {
-    corridor: {
-      minLng: CORRIDOR.minLng,
-      minLat: CORRIDOR.minLat,
-      maxLng: CORRIDOR.maxLng,
-      maxLat: CORRIDOR.maxLat,
-    },
-    chunkCount: CHUNK_COUNT,
-    gridW: CHUNK_GRID_W,
-    chunkGridH: CHUNK_GRID_H,
-    latSpan,
-    lngSpan,
-    chunkAspect: CHUNK_GRID_H / CHUNK_GRID_W,
+    version: 2,
+    projection: PROJECTION,
+    regions: [...regionExtent].map(([id, e]) => ({ id, elevMin: e.min, elevMax: e.max })),
+    path: { waypoints: PATH_WAYPOINTS },
     chunks: manifestChunks,
   };
   await Bun.write(`${CORRIDOR_DIR}/manifest.json`, JSON.stringify(manifest, null, 2));
 
-  console.log(`\nWrote ${CHUNK_COUNT} chunks + manifest to ${CORRIDOR_DIR}/`);
+  console.log(`\nWrote ${plans.length} chunks + manifest v2 to ${CORRIDOR_DIR}/`);
   if (failedChunks.length) {
     console.warn(`WARNING: chunks with empty features (Overpass failed): ${failedChunks.join(', ')}`);
   } else {

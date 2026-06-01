@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { pathPointAt, pathLength } from './projection.js';
 
 const DEG = Math.PI / 180;
 const TILT_MIN = 15 * DEG;
@@ -10,17 +11,16 @@ const TILT_MAX = 45 * DEG;
  *  - two-finger / wheel-drag => scrub target along fixed map X/Z
  *  - idle => slow auto-orbit (disabled under prefers-reduced-motion)
  */
-export function createControls(camera, dom, mapAspect) {
-  // mapAspect = height/width: the terrain plane's Z half-extent
+export function createControls(camera, dom) {
   const target = new THREE.Vector3(0, 0, 0);
   const state = { azimuth: 0, tilt: 45 * DEG, radius: 1.7 };
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastInteract = 0;
   let orbitSpeed = 0.001;
-  // Scrub Z clamp bounds; default to the symmetric single-map range, overridable
-  // via setScrubBounds for the streaming corridor.
-  let scrubMinZ = -mapAspect;
-  let scrubMaxZ = mapAspect;
+  // Pan is a 1-D arc-length `s` along a world polyline (the corridor path).
+  let pathPts = [{ x: 0, z: 0 }];
+  let pathLen = 0;
+  let s = 0;
 
   function apply() {
     const r = state.radius;
@@ -48,11 +48,16 @@ export function createControls(camera, dom, mapAspect) {
   });
   dom.addEventListener('pointerup', () => { dragging = false; });
 
-  // --- two-finger pan / wheel = scrub along fixed map axes ---
+  // --- two-finger pan / wheel = advance along the path ---
+  function setTargetFromS() {
+    const p = pathPointAt(s, pathPts);
+    target.x = p.x;
+    target.z = p.z;
+  }
   function scrub(dx, dz) {
     const k = 0.0015;
-    target.x = Math.min(1, Math.max(-1, target.x + dx * k));
-    target.z = Math.min(scrubMaxZ, Math.max(scrubMinZ, target.z + dz * k));
+    s = Math.min(pathLen, Math.max(0, s + dz * k)); // vertical delta advances the path
+    setTargetFromS();
     lastInteract = performance.now();
   }
   dom.addEventListener('wheel', (e) => { e.preventDefault(); scrub(e.deltaX, e.deltaY); }, { passive: false });
@@ -89,9 +94,15 @@ export function createControls(camera, dom, mapAspect) {
   const setRadius = (v) => { state.radius = v; };
   const setTilt = (deg) => { state.tilt = Math.min(TUNE_TILT_MAX, Math.max(TUNE_TILT_MIN, deg * DEG)); };
   const setOrbitSpeed = (v) => { orbitSpeed = v; };
-  const setScrubBounds = (minZ, maxZ) => { scrubMinZ = minZ; scrubMaxZ = maxZ; };
-  const setTarget = (z) => { target.z = Math.min(scrubMaxZ, Math.max(scrubMinZ, z)); };
+  const setPath = (points) => {
+    pathPts = points.length ? points : [{ x: 0, z: 0 }];
+    pathLen = pathLength(pathPts);
+    s = Math.min(pathLen, Math.max(0, s));
+    setTargetFromS();
+  };
+  const setS = (v) => { s = Math.min(pathLen, Math.max(0, v)); setTargetFromS(); };
+  const getS = () => s;
   const getValues = () => ({ radius: state.radius, tiltDeg: state.tilt / DEG, orbitSpeed });
 
-  return { update, setRadius, setTilt, setOrbitSpeed, setScrubBounds, setTarget, target, getValues };
+  return { update, setRadius, setTilt, setOrbitSpeed, setPath, setS, getS, target, getValues };
 }
