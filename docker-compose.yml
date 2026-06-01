@@ -1,0 +1,42 @@
+# Local Docker dev environment for 518.codes.
+# Not the production deploy path (the project is served by Laravel Herd /
+# Laravel Cloud). This exists so the app can be run without installing PHP on
+# the host. SQLite is used, so no database service is required.
+#
+#   docker compose up --build
+#
+# App:  http://localhost:8000   Vite dev server: http://localhost:5180
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    working_dir: /var/www/html
+    # Run as the host user so files written into the bind mount
+    # (vendor/, database/database.sqlite, .env) are not root-owned.
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      HOME: /tmp
+      COMPOSER_HOME: /tmp/composer
+      PHP_OPCACHE_ENABLE: "0"
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    command: ["sh", "/var/www/html/docker/serve.sh"]
+
+  vite:
+    image: node:24-alpine
+    working_dir: /var/www/html
+    environment:
+      VITE_HOST: "0.0.0.0"
+      # Optional LAN access: to reach the dev server from other devices, set these in your
+      # local .env (e.g. VITE_ORIGIN=http://192.168.0.50:5180, VITE_HMR_HOST=192.168.0.50).
+      # Empty by default = localhost only.
+      VITE_ORIGIN: "${VITE_ORIGIN:-}"
+      VITE_HMR_HOST: "${VITE_HMR_HOST:-}"
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "5180:5180"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5180"

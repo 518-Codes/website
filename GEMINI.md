@@ -1,3 +1,23 @@
+# Quickstart
+
+The project is normally served by **Laravel Herd** at `https://website.test`. If
+you don't have PHP/Herd installed, a Docker Compose dev environment is provided
+(SQLite-backed, no database container needed):
+
+```bash
+UID=$(id -u) GID=$(id -g) docker compose up --build
+```
+
+This builds the `app` image (`docker/Dockerfile`), runs `docker/serve.sh`
+(`.env` setup, `composer install`, key generation, migrate, seed), and starts:
+
+- **app** — `php artisan serve` at http://localhost:8000
+- **vite** — Vite dev server with HMR at http://localhost:5180
+
+Default admin login (from `DatabaseSeeder`): `test@example.com` / `password`.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
