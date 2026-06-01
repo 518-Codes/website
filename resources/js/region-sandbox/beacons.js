@@ -28,7 +28,7 @@ const BEACON_FRAG = `
   uniform float uGlow, uOpacity;
   varying float vT;
   void main(){
-    float b = 1.0 - 0.95 * vT;             // bright base -> dim apex
+    float b = 1.0 - 0.6 * vT;              // bright base (1.0) -> dim but visible top (0.4)
     gl_FragColor = vec4(uColor * b * uGlow, uOpacity);
   }`;
 
@@ -53,10 +53,12 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     const z = (g.z * 2 - 1) * chunkAspect + zOffset;
     const baseY = sampleHeight(heightmap, g.x, g.z) * RELIEF;
 
-    // Beacon: a slender unit cone (wide base -> point top, an inverted-funnel spire),
-    // scaled per-frame by the size envelope. The shader fades it bright-at-base to
-    // dim-at-top; per-frame uGlow scales overall brightness, uOpacity its transparency.
-    const beaconGeo = new THREE.ConeGeometry(1, 1, 14, 6);
+    // Beacon: a slender truncated cone (wide bright base -> narrower dim top, stopping
+    // flat like an inverted funnel) scaled per-frame by the size envelope. The flat-ish
+    // top keeps enough width for the dim gradient to register through the ASCII cells —
+    // a sharp apex is a sub-cell point and the dim band never appears. Shader fades
+    // bright-at-base to dim-at-top; uGlow/uOpacity are set per-frame.
+    const beaconGeo = new THREE.CylinderGeometry(0.3, 1, 1, 16, 6);
     const beaconMat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: color.clone() },
