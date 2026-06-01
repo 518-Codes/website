@@ -53,8 +53,8 @@
         .prose h1 { font-size: 28px; }
         .prose h2 { font-size: 22px; }
         .prose h3 { font-size: 18px; }
-        .prose ul, .prose ol { padding-left: 24px; }
-        .prose ul { list-style: none; padding-left: 0; }
+        .prose ul, .prose ol { padding-left: 20px; margin-left: 16px; }
+        .prose ul { list-style: none; }
         .prose ul li { padding-left: 18px; position: relative; margin-bottom: 6px; }
         .prose ul li::before { content: '›'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
         .prose ol { list-style: decimal; }
@@ -72,16 +72,15 @@
         .prose pre {
             background: var(--surface); border: 2px solid var(--fg);
             padding: 16px 20px; overflow-x: auto;
-            box-shadow: 4px 4px 0 0 var(--fg);
+            box-shadow: 4px 4px 0 0 var(--fg); margin-bottom: 24px;
         }
         .prose pre code {
             background: none; border: none; padding: 0;
             color: var(--accent); font-size: 13px; line-height: 1.6;
         }
-        .prose table { border-collapse: collapse; width: 100%; border: 2px solid var(--fg); font-size: 13px; }
-        .prose thead tr { background: var(--fg); color: var(--bg); }
+        .prose table { border-collapse: collapse; width: 100%; border: 2px solid var(--fg); font-size: 13px; box-shadow: 4px 4px 0 0 var(--fg); }
         .prose thead th {
-            padding: 6px 14px; text-align: left;
+            background: var(--fg); color: var(--bg); padding: 6px 14px; text-align: left;
             font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
         }
         .prose tbody tr { border-bottom: 1px solid var(--hairline); }
