@@ -114,8 +114,8 @@ export async function mountRegionSandbox(root) {
       },
       layerGlow: {
         'road-major': 1,
-        'road-sub': 1,
-        'water-river': 1,
+        'road-sub': 0.4,
+        'water-river': 0.6,
         'water-stream': 1,
         'water-area': 1,
         terrain: 1,
