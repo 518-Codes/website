@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\MapEventsController;
 use App\Livewire\EventDetail;
 use App\Livewire\EventsIndex;
 use App\Models\Meetup;
 use App\Models\Rsvp;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/api/map-events', MapEventsController::class);
 
 Route::get('/map', fn () => view('region-map'));
 
