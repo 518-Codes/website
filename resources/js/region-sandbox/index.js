@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createWorld, createChunkContent } from './scene.js';
+import { createWorld, createChunkContent, FEATURE_COLORS, TERRAIN_COLOR, TERRAIN_GREEN } from './scene.js';
 import { createChunkLabels } from './labels.js';
 import { createControls } from './controls.js';
 import { createAsciiPass } from './ascii-pass.js';
@@ -14,6 +14,15 @@ const LAYER_HANDLE = {
   'water-stream': 'waterStream',
   'water-area': 'waterArea',
 };
+
+/** All tunable layers (feature handles + terrain) and base THREE.Color instances for glow. */
+const FEATURE_LAYERS = Object.keys(LAYER_HANDLE);
+const GLOW_LAYERS = [...FEATURE_LAYERS, 'terrain'];
+const LAYER_BASE = Object.fromEntries(
+  Object.entries(FEATURE_COLORS).map(([name, hex]) => [name, new THREE.Color(hex)]),
+);
+const TERRAIN_BASE = new THREE.Color(TERRAIN_COLOR);
+const GREEN_BASE = new THREE.Color(TERRAIN_GREEN);
 
 /** Real WebGL capability probe (a truthy global is not enough). */
 function webglOk() {
@@ -92,7 +101,7 @@ export async function mountRegionSandbox(root) {
 
     // Current control state shared across all chunks; new chunks inherit it on load.
     const settings = {
-      relief: 0.35,
+      relief: 0.3,
       light: 1.6,
       elevationOn: false,
       layers: {
@@ -103,7 +112,17 @@ export async function mountRegionSandbox(root) {
         'water-area': true,
         terrain: true,
       },
+      layerGlow: {
+        'road-major': 1,
+        'road-sub': 1,
+        'water-river': 1,
+        'water-stream': 1,
+        'water-area': 1,
+        terrain: 1,
+      },
     };
+    // Geometry bakes RELIEF (0.35); worldGroup.scale.y maps that to the chosen relief.
+    worldGroup.scale.y = settings.relief / 0.35;
 
     /** index -> { content, labels, beacons } */
     const loaded = new Map();
@@ -116,6 +135,21 @@ export async function mountRegionSandbox(root) {
         const h = content.handles[handleKey];
         if (h) { h.visible = settings.layers[name]; }
       }
+    };
+
+    /** Apply current per-feature glow (color * glow) to a chunk's feature handles. */
+    const applyLayerGlow = (content) => {
+      for (const name of FEATURE_LAYERS) {
+        const h = content.handles[LAYER_HANDLE[name]];
+        if (h) { h.material.color.copy(LAYER_BASE[name]).multiplyScalar(settings.layerGlow[name]); }
+      }
+    };
+
+    /** Terrain glow tints the shared terrain materials (std + elevation). */
+    const applyTerrainGlow = () => {
+      const g = settings.layerGlow.terrain;
+      stdMaterial.color.copy(TERRAIN_BASE).multiplyScalar(g);
+      elevMaterial.uniforms.uGreen.value.copy(GREEN_BASE).multiplyScalar(g);
     };
 
     async function loadChunk(i) {
@@ -136,6 +170,7 @@ export async function mountRegionSandbox(root) {
         });
         content.group.position.z = i * chunkZSpan;
         applyLayers(content);
+        applyLayerGlow(content);
         worldGroup.add(content.group);
 
         const labels = createChunkLabels(labelsEl, chunk.heightmap, chunk.cities, {
@@ -240,6 +275,15 @@ export async function mountRegionSandbox(root) {
           }
         }
       },
+      setLayerGlow(name, v) {
+        if (!(name in settings.layerGlow)) { return; }
+        settings.layerGlow[name] = v;
+        if (name === 'terrain') {
+          applyTerrainGlow();
+        } else {
+          for (const { content } of loaded.values()) { applyLayerGlow(content); }
+        }
+      },
       setEventsVisible(on) {
         eventsVisible = on;
         for (const { beacons } of loaded.values()) {
@@ -259,6 +303,8 @@ export async function mountRegionSandbox(root) {
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
+        const glow = {};
+        for (const name of GLOW_LAYERS) { glow[`glow-${name}`] = settings.layerGlow[name]; }
         return {
           relief: settings.relief,
           glow: a.glow,
@@ -288,6 +334,7 @@ export async function mountRegionSandbox(root) {
           beaconHeight: eventThresholds.beaconMaxHeight,
           beaconGlow: eventThresholds.beaconGlow,
           beaconGradient: eventThresholds.beaconGradient,
+          ...glow,
         };
       },
     };

@@ -58,9 +58,22 @@ export async function mountMapPage(root) {
 
   for (const name of LAYERS) {
     const cb = root.querySelector(`#ctl-layer-${name}`);
-    if (!cb) continue;
-    cb.checked = vals[name] !== false;
-    cb.addEventListener('change', () => api.setLayer(name, cb.checked));
+    if (cb) {
+      cb.checked = vals[name] !== false;
+      cb.addEventListener('change', () => api.setLayer(name, cb.checked));
+    }
+
+    const glow = root.querySelector(`#ctl-glow-${name}`);
+    const glowOut = root.querySelector(`#val-glow-${name}`);
+    if (glow) {
+      glow.value = vals[`glow-${name}`];
+      if (glowOut) glowOut.textContent = String(vals[`glow-${name}`]);
+      glow.addEventListener('input', () => {
+        const v = parseFloat(glow.value);
+        api.setLayerGlow(name, v);
+        if (glowOut) glowOut.textContent = glow.value;
+      });
+    }
   }
 
   const copyBtn = root.querySelector('#ctl-copy');

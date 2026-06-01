@@ -3,6 +3,17 @@ import * as THREE from 'three';
 /** Vertical exaggeration applied to normalized heights; shared by terrain, features, labels. */
 export const RELIEF = 0.35;
 
+/** Base (pre-glow) colors per feature layer; shared by the renderer and the glow controls. */
+export const FEATURE_COLORS = {
+  'road-major': 0xd8ffe0, // brightest => dominant glyphs
+  'road-sub': 0x9fe8b5, // dimmer green
+  'water-river': 0xbfeeff, // bright blue, prominent
+  'water-stream': 0x4f93b0, // dim/muted blue, recedes
+  'water-area': 0x9af2ff, // bright cyan fill
+};
+export const TERRAIN_COLOR = 0x2a3a2a;
+export const TERRAIN_GREEN = 0x5efc8d;
+
 /**
  * Builds the shared world: scene lighting + shared terrain materials + a worldGroup.
  * All chunk groups are added inside worldGroup so worldGroup.scale.y controls relief globally.
@@ -12,14 +23,14 @@ export const RELIEF = 0.35;
 export function createWorld(scene) {
   scene.background = new THREE.Color(0x0b0f0b);
 
-  const stdMaterial = new THREE.MeshStandardMaterial({ color: 0x2a3a2a, flatShading: false, metalness: 0, roughness: 1 });
+  const stdMaterial = new THREE.MeshStandardMaterial({ color: TERRAIN_COLOR, flatShading: false, metalness: 0, roughness: 1 });
   // Unlit material that shades terrain by normalized height in discrete green bands.
   const elevMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uRelief: { value: RELIEF },
       uBands: { value: 12.0 },
       uCurve: { value: 0.5 },
-      uGreen: { value: new THREE.Color(0x5efc8d) },
+      uGreen: { value: new THREE.Color(TERRAIN_GREEN) },
     },
     vertexShader: `
       varying float vH;
@@ -175,17 +186,17 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
     return lines;
   };
 
-  const roadMajor = addLineBatch(lineVerts['road-major'], 0xd8ffe0);    // brightest => dominant glyphs
-  const roadSub = addLineBatch(lineVerts['road-sub'], 0x9fe8b5);        // dimmer green
-  const waterRiver = addLineBatch(lineVerts['water-river'], 0xbfeeff);  // bright blue, prominent
-  const waterStream = addLineBatch(lineVerts['water-stream'], 0x4f93b0); // dim/muted blue, recedes
+  const roadMajor = addLineBatch(lineVerts['road-major'], FEATURE_COLORS['road-major']);
+  const roadSub = addLineBatch(lineVerts['road-sub'], FEATURE_COLORS['road-sub']);
+  const waterRiver = addLineBatch(lineVerts['water-river'], FEATURE_COLORS['water-river']);
+  const waterStream = addLineBatch(lineVerts['water-stream'], FEATURE_COLORS['water-stream']);
 
   let waterArea;
   if (areaIndices.length > 0) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(areaPositions, 3));
     geo.setIndex(areaIndices);
-    waterArea = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x9af2ff, side: THREE.DoubleSide }));
+    waterArea = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: FEATURE_COLORS['water-area'], side: THREE.DoubleSide }));
     group.add(waterArea);
   }
 

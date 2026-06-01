@@ -475,31 +475,73 @@
                 <input type="checkbox" id="ctl-layer-road-major">
                 <span class="ctl-check-label">major highways</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 12px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-road-major">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-road-major">—</span>
+                </div>
+                <input type="range" id="ctl-glow-road-major" min="0" max="2" step="0.05">
+            </div>
 
             <label class="ctl-check-row">
                 <input type="checkbox" id="ctl-layer-road-sub">
                 <span class="ctl-check-label">sub highways</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 12px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-road-sub">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-road-sub">—</span>
+                </div>
+                <input type="range" id="ctl-glow-road-sub" min="0" max="2" step="0.05">
+            </div>
 
             <label class="ctl-check-row">
                 <input type="checkbox" id="ctl-layer-water-river">
                 <span class="ctl-check-label">rivers / canals</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 12px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-water-river">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-water-river">—</span>
+                </div>
+                <input type="range" id="ctl-glow-water-river" min="0" max="2" step="0.05">
+            </div>
 
             <label class="ctl-check-row">
                 <input type="checkbox" id="ctl-layer-water-stream">
                 <span class="ctl-check-label">streams</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 12px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-water-stream">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-water-stream">—</span>
+                </div>
+                <input type="range" id="ctl-glow-water-stream" min="0" max="2" step="0.05">
+            </div>
 
             <label class="ctl-check-row">
                 <input type="checkbox" id="ctl-layer-water-area">
                 <span class="ctl-check-label">lakes / ponds</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 12px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-water-area">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-water-area">—</span>
+                </div>
+                <input type="range" id="ctl-glow-water-area" min="0" max="2" step="0.05">
+            </div>
 
             <label class="ctl-check-row">
                 <input type="checkbox" id="ctl-layer-terrain">
                 <span class="ctl-check-label">terrain</span>
             </label>
+            <div class="ctl-row" style="margin:0 0 4px 22px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-glow-terrain">↳ glow</label>
+                    <span class="ctl-val" id="val-glow-terrain">—</span>
+                </div>
+                <input type="range" id="ctl-glow-terrain" min="0" max="2" step="0.05">
+            </div>
         </div>
 
         <div class="panel-section">
