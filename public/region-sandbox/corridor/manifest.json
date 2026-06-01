@@ -18,8 +18,8 @@
     },
     {
       "id": "longisland",
-      "elevMin": -371.5,
-      "elevMax": 530.5
+      "elevMin": -356,
+      "elevMax": 309
     }
   ],
   "path": {
@@ -359,20 +359,14 @@
       "bbox": {
         "minLat": 40.5,
         "maxLat": 41.2,
-        "minLng": -74,
-        "maxLng": -73.56
+        "minLng": -73.4,
+        "maxLng": -73
       },
       "grid": {
         "width": 256,
-        "height": 407
+        "height": 448
       },
-      "cities": [
-        {
-          "name": "Yonkers",
-          "x": 0.2302,
-          "z": 0.384
-        }
-      ]
+      "cities": []
     },
     {
       "index": 14,
@@ -382,14 +376,20 @@
       "bbox": {
         "minLat": 40.5,
         "maxLat": 41.2,
-        "minLng": -73.56,
-        "maxLng": -73.12
+        "minLng": -73,
+        "maxLng": -72.6
       },
       "grid": {
         "width": 256,
-        "height": 407
+        "height": 448
       },
-      "cities": []
+      "cities": [
+        {
+          "name": "Riverhead",
+          "x": 0.845,
+          "z": 0.4043
+        }
+      ]
     },
     {
       "index": 15,
@@ -399,12 +399,12 @@
       "bbox": {
         "minLat": 40.5,
         "maxLat": 41.2,
-        "minLng": -73.12,
-        "maxLng": -72.68
+        "minLng": -72.6,
+        "maxLng": -72.19999999999999
       },
       "grid": {
         "width": 256,
-        "height": 407
+        "height": 448
       },
       "cities": []
     },
@@ -416,40 +416,17 @@
       "bbox": {
         "minLat": 40.5,
         "maxLat": 41.2,
-        "minLng": -72.67999999999999,
-        "maxLng": -72.24
-      },
-      "grid": {
-        "width": 256,
-        "height": 407
-      },
-      "cities": [
-        {
-          "name": "Riverhead",
-          "x": 0.0409,
-          "z": 0.4043
-        }
-      ]
-    },
-    {
-      "index": 17,
-      "file": "chunk-17.json",
-      "segment": "longisland",
-      "region": "longisland",
-      "bbox": {
-        "minLat": 40.5,
-        "maxLat": 41.2,
-        "minLng": -72.24,
+        "minLng": -72.2,
         "maxLng": -71.8
       },
       "grid": {
         "width": 256,
-        "height": 407
+        "height": 448
       },
       "cities": [
         {
           "name": "Montauk",
-          "x": 0.6489,
+          "x": 0.6138,
           "z": 0.2344
         }
       ]

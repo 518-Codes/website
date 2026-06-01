@@ -72,5 +72,7 @@ export const PATH_WAYPOINTS = [
 /** The two geometry segments: the N→S mainline and the W→E Long Island arm. */
 export const SEGMENTS: Segment[] = [
   { id: 'mainline', axis: 'lat', bbox: { minLng: -74.3, minLat: 40.55, maxLng: -73.4, maxLat: 45.0 }, degPerChunk: 0.331 },
-  { id: 'longisland', axis: 'lng', bbox: { minLng: -74.0, minLat: 40.5, maxLng: -71.8, maxLat: 41.2 }, degPerChunk: 0.44 },
+  // West edge = mainline's east edge (-73.4) so the two segments don't overlap (an overlap
+  // double-bakes the NYC/Yonkers strip — duplicate city labels + ghosted features).
+  { id: 'longisland', axis: 'lng', bbox: { minLng: -73.4, minLat: 40.5, maxLng: -71.8, maxLat: 41.2 }, degPerChunk: 0.44 },
 ];
