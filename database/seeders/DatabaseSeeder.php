@@ -22,11 +22,17 @@ class DatabaseSeeder extends Seeder
 
         $tags = Tag::factory(10)->create();
 
-        Meetup::factory(8)->create()->each(function (Meetup $meetup) use ($tags) {
+        // Upcoming published events (the majority).
+        Meetup::factory(18)->upcoming()->create()->each(function (Meetup $meetup) use ($tags) {
             $meetup->tags()->attach($tags->random(rand(1, 4))->pluck('id'));
             $meetup->rsvps()->createMany(
                 RsvpFactory::new()->count(rand(3, 12))->make()->toArray()
             );
+        });
+
+        // A handful of past/draft/cancelled events for realistic variety.
+        Meetup::factory(6)->create()->each(function (Meetup $meetup) use ($tags) {
+            $meetup->tags()->attach($tags->random(rand(1, 3))->pluck('id'));
         });
     }
 }

@@ -174,7 +174,7 @@
                 @else
                     <div class="row"><span>next event</span><b>TBA</b></div>
                 @endif
-                <div class="row"><span>cities</span><b>{{ count(config('cities')) }}</b></div>
+                <div class="row"><span>cities</span><b>12</b></div>
                 <div class="row"><span>people coming</span><b>{{ $stats['rsvps_total'] }}</b></div>
                 <div class="row"><span>cost to show up</span><b>$0</b></div>
             </div>
