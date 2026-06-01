@@ -7,18 +7,34 @@
   },
   "regions": [
     {
-      "id": "hudson"
+      "id": "adirondack",
+      "elevMin": -49.625,
+      "elevMax": 1572.5
+    },
+    {
+      "id": "hudson",
+      "elevMin": -126.88888549804688,
+      "elevMax": 1211
+    },
+    {
+      "id": "longisland",
+      "elevMin": -371.5,
+      "elevMax": 530.5
     }
   ],
   "path": {
     "waypoints": [
       {
         "lng": -73.85,
-        "lat": 43.2
+        "lat": 45
       },
       {
         "lng": -73.85,
-        "lat": 40.55
+        "lat": 40.7
+      },
+      {
+        "lng": -71.8576,
+        "lat": 41.0715
       }
     ]
   },
@@ -27,22 +43,22 @@
       "index": 0,
       "file": "chunk-0.json",
       "segment": "mainline",
-      "region": "hudson",
+      "region": "adirondack",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 42.868750000000006,
         "maxLng": -73.4,
-        "maxLat": 43.2
+        "minLat": 44.65769230769231,
+        "maxLat": 45
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Saratoga",
-          "x": 0.5727,
-          "z": 0.3529
+          "name": "Plattsburgh",
+          "x": 0.9412,
+          "z": 0.8779
         }
       ]
     },
@@ -50,32 +66,22 @@
       "index": 1,
       "file": "chunk-1.json",
       "segment": "mainline",
-      "region": "hudson",
+      "region": "adirondack",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 42.53750000000001,
         "maxLng": -73.4,
-        "maxLat": 42.868750000000006
+        "minLat": 44.315384615384616,
+        "maxLat": 44.65769230769231
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Schenectady",
-          "x": 0.4004,
-          "z": 0.1647
-        },
-        {
-          "name": "Troy",
-          "x": 0.6758,
-          "z": 0.4237
-        },
-        {
-          "name": "Albany",
-          "x": 0.6042,
-          "z": 0.6525
+          "name": "Saranac Lake",
+          "x": 0.1874,
+          "z": 0.9588
         }
       ]
     },
@@ -83,22 +89,22 @@
       "index": 2,
       "file": "chunk-2.json",
       "segment": "mainline",
-      "region": "hudson",
+      "region": "adirondack",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 42.20625,
         "maxLng": -73.4,
-        "maxLat": 42.5375
+        "minLat": 43.973076923076924,
+        "maxLat": 44.315384615384616
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Hudson",
-          "x": 0.5656,
-          "z": 0.8601
+          "name": "Lake Placid",
+          "x": 0.3557,
+          "z": 0.1048
         }
       ]
     },
@@ -106,24 +112,18 @@
       "index": 3,
       "file": "chunk-3.json",
       "segment": "mainline",
-      "region": "hudson",
+      "region": "adirondack",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 41.875,
         "maxLng": -73.4,
-        "maxLat": 42.20625
+        "minLat": 43.63076923076923,
+        "maxLat": 43.973076923076924
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
-      "cities": [
-        {
-          "name": "Kingston",
-          "x": 0.3362,
-          "z": 0.843
-        }
-      ]
+      "cities": []
     },
     {
       "index": 4,
@@ -132,19 +132,24 @@
       "region": "hudson",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 41.54375,
         "maxLng": -73.4,
-        "maxLat": 41.875
+        "minLat": 43.28846153846154,
+        "maxLat": 43.63076923076923
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Poughkeepsie",
-          "x": 0.4212,
-          "z": 0.5271
+          "name": "Glens Falls",
+          "x": 0.7289,
+          "z": 0.9385
+        },
+        {
+          "name": "Lake George",
+          "x": 0.6539,
+          "z": 0.5938
         }
       ]
     },
@@ -155,24 +160,19 @@
       "region": "hudson",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 41.212500000000006,
         "maxLng": -73.4,
-        "maxLat": 41.54375
+        "minLat": 42.94615384615385,
+        "maxLat": 43.28846153846154
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Newburgh",
-          "x": 0.3218,
-          "z": 0.1218
-        },
-        {
-          "name": "Peekskill",
-          "x": 0.4218,
-          "z": 0.7657
+          "name": "Saratoga",
+          "x": 0.5727,
+          "z": 0.5999
         }
       ]
     },
@@ -183,19 +183,29 @@
       "region": "hudson",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 40.881249999999994,
         "maxLng": -73.4,
-        "maxLat": 41.2125
+        "minLat": 42.603846153846156,
+        "maxLat": 42.94615384615385
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
       },
       "cities": [
         {
-          "name": "Yonkers",
-          "x": 0.4459,
-          "z": 0.8492
+          "name": "Schenectady",
+          "x": 0.4004,
+          "z": 0.3855
+        },
+        {
+          "name": "Troy",
+          "x": 0.6758,
+          "z": 0.6361
+        },
+        {
+          "name": "Albany",
+          "x": 0.6042,
+          "z": 0.8576
         }
       ]
     },
@@ -206,19 +216,241 @@
       "region": "hudson",
       "bbox": {
         "minLng": -74.3,
-        "minLat": 40.55,
         "maxLng": -73.4,
-        "maxLat": 40.881249999999994
+        "minLat": 42.26153846153846,
+        "maxLat": 42.60384615384615
       },
       "grid": {
         "width": 256,
-        "height": 94
+        "height": 97
+      },
+      "cities": []
+    },
+    {
+      "index": 8,
+      "file": "chunk-8.json",
+      "segment": "mainline",
+      "region": "hudson",
+      "bbox": {
+        "minLng": -74.3,
+        "maxLng": -73.4,
+        "minLat": 41.919230769230765,
+        "maxLat": 42.26153846153846
+      },
+      "grid": {
+        "width": 256,
+        "height": 97
+      },
+      "cities": [
+        {
+          "name": "Hudson",
+          "x": 0.5656,
+          "z": 0.0261
+        },
+        {
+          "name": "Kingston",
+          "x": 0.3362,
+          "z": 0.9773
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "file": "chunk-9.json",
+      "segment": "mainline",
+      "region": "hudson",
+      "bbox": {
+        "minLng": -74.3,
+        "maxLng": -73.4,
+        "minLat": 41.57692307692307,
+        "maxLat": 41.919230769230765
+      },
+      "grid": {
+        "width": 256,
+        "height": 97
+      },
+      "cities": [
+        {
+          "name": "Poughkeepsie",
+          "x": 0.4212,
+          "z": 0.6393
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "file": "chunk-10.json",
+      "segment": "mainline",
+      "region": "hudson",
+      "bbox": {
+        "minLng": -74.3,
+        "maxLng": -73.4,
+        "minLat": 41.23461538461538,
+        "maxLat": 41.57692307692307
+      },
+      "grid": {
+        "width": 256,
+        "height": 97
+      },
+      "cities": [
+        {
+          "name": "Newburgh",
+          "x": 0.3218,
+          "z": 0.2148
+        },
+        {
+          "name": "Peekskill",
+          "x": 0.4218,
+          "z": 0.8379
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "file": "chunk-11.json",
+      "segment": "mainline",
+      "region": "hudson",
+      "bbox": {
+        "minLng": -74.3,
+        "maxLng": -73.4,
+        "minLat": 40.89230769230769,
+        "maxLat": 41.23461538461538
+      },
+      "grid": {
+        "width": 256,
+        "height": 97
+      },
+      "cities": [
+        {
+          "name": "Yonkers",
+          "x": 0.4459,
+          "z": 0.8864
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "file": "chunk-12.json",
+      "segment": "mainline",
+      "region": "hudson",
+      "bbox": {
+        "minLng": -74.3,
+        "maxLng": -73.4,
+        "minLat": 40.55,
+        "maxLat": 40.89230769230769
+      },
+      "grid": {
+        "width": 256,
+        "height": 97
       },
       "cities": [
         {
           "name": "New York City",
           "x": 0.3267,
-          "z": 0.5085
+          "z": 0.5244
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "file": "chunk-13.json",
+      "segment": "longisland",
+      "region": "longisland",
+      "bbox": {
+        "minLat": 40.5,
+        "maxLat": 41.2,
+        "minLng": -74,
+        "maxLng": -73.56
+      },
+      "grid": {
+        "width": 256,
+        "height": 407
+      },
+      "cities": [
+        {
+          "name": "Yonkers",
+          "x": 0.2302,
+          "z": 0.384
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "file": "chunk-14.json",
+      "segment": "longisland",
+      "region": "longisland",
+      "bbox": {
+        "minLat": 40.5,
+        "maxLat": 41.2,
+        "minLng": -73.56,
+        "maxLng": -73.12
+      },
+      "grid": {
+        "width": 256,
+        "height": 407
+      },
+      "cities": []
+    },
+    {
+      "index": 15,
+      "file": "chunk-15.json",
+      "segment": "longisland",
+      "region": "longisland",
+      "bbox": {
+        "minLat": 40.5,
+        "maxLat": 41.2,
+        "minLng": -73.12,
+        "maxLng": -72.68
+      },
+      "grid": {
+        "width": 256,
+        "height": 407
+      },
+      "cities": []
+    },
+    {
+      "index": 16,
+      "file": "chunk-16.json",
+      "segment": "longisland",
+      "region": "longisland",
+      "bbox": {
+        "minLat": 40.5,
+        "maxLat": 41.2,
+        "minLng": -72.67999999999999,
+        "maxLng": -72.24
+      },
+      "grid": {
+        "width": 256,
+        "height": 407
+      },
+      "cities": [
+        {
+          "name": "Riverhead",
+          "x": 0.0409,
+          "z": 0.4043
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "file": "chunk-17.json",
+      "segment": "longisland",
+      "region": "longisland",
+      "bbox": {
+        "minLat": 40.5,
+        "maxLat": 41.2,
+        "minLng": -72.24,
+        "maxLng": -71.8
+      },
+      "grid": {
+        "width": 256,
+        "height": 407
+      },
+      "cities": [
+        {
+          "name": "Montauk",
+          "x": 0.6489,
+          "z": 0.2344
         }
       ]
     }
