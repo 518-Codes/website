@@ -6,6 +6,8 @@ import { createAsciiPass } from './ascii-pass.js';
 import { createChunkBeacons } from './beacons.js';
 import { EVENT_DEFAULTS, groupByLocation, projectEventToCorridor } from './events.js';
 import { chunkWorld, pathPoints, projectPointToS, geoToWorld } from './projection.js';
+import { createEasterEggs, hitTestEggs } from './easter-eggs.js';
+import { createFireworks } from './fireworks.js';
 
 /** Maps a layer name to its handle key on createChunkContent's `handles`. */
 const LAYER_HANDLE = {
@@ -49,6 +51,11 @@ export async function mountRegionSandbox(root) {
     const base = root.dataset.assets;
     const manifest = await fetch(`${base}/corridor/manifest.json`).then((r) => r.json());
 
+    const EGGS = [
+      { id: 'marcy', lat: 44.1126, lng: -73.9237, hue: 0.33 },     // Mt Marcy — green
+      { id: 'montauk', lat: 41.0715, lng: -71.8576, hue: 0.58 },   // Montauk Point — cyan
+    ];
+
     // Events are optional: only when a same-origin endpoint is provided. Failures degrade to none.
     const eventsEndpoint = root.dataset.eventsEndpoint;
     let allEvents = [];
@@ -88,6 +95,11 @@ export async function mountRegionSandbox(root) {
 
     const scene = new THREE.Scene();
     const { key, ambient, stdMaterial, elevMaterial, worldGroup } = createWorld(scene);
+
+    const fireworks = createFireworks(worldGroup, { reduceMotion });
+    // Eggs are placed when their containing chunk loads (need its heightmap); kept here.
+    const eggManagers = []; // { update(relief), hitMeshes }
+    const eggHitMeshes = [];
 
     const labelsEl = root.querySelector('.region-labels');
 
@@ -199,6 +211,17 @@ export async function mountRegionSandbox(root) {
           worldGroup.add(beacons.group);
         }
 
+        for (const egg of EGGS) {
+          const p = projectEventToCorridor({ lat: egg.lat, lng: egg.lng }, manifest);
+          if (!p || p.chunkIndex !== i) { continue; }
+          const mgr = createEasterEggs(worldGroup, [{
+            id: egg.id, x: world.x, z: world.z, w: world.w, d: world.d,
+            localX: p.x, localZ: p.z, heightmap: chunk.heightmap, hue: egg.hue,
+          }]);
+          eggManagers.push(mgr);
+          eggHitMeshes.push(...mgr.hitMeshes);
+        }
+
         loaded.set(i, { content, labels, beacons });
       } catch (err) {
         console.error(`[region-sandbox] failed to load chunk ${i}`, err);
@@ -241,9 +264,33 @@ export async function mountRegionSandbox(root) {
         labels.update(camera, w, h, settings.relief);
         if (beacons) { beacons.update(camera, w, h, settings.relief); }
       }
+      for (const mgr of eggManagers) { mgr.update(settings.relief); }
+      fireworks.update(1 / 60);
       ascii.render();
     };
     tick();
+
+    // Easter-egg clicks: a pointerup that didn't drag → raycast against egg hit meshes.
+    let downX = 0, downY = 0, downT = 0;
+    canvas.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; downT = performance.now(); });
+    canvas.addEventListener('pointerup', (e) => {
+      const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
+      if (moved > 6 || performance.now() - downT > 500) { return; } // a drag, not a click
+      const rect = canvas.getBoundingClientRect();
+      const ndc = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
+      };
+      const id = hitTestEggs(ndc, camera, eggHitMeshes);
+      if (!id) { return; }
+      const egg = EGGS.find((g) => g.id === id);
+      const mgr = eggManagers.find((m) => m.hitMeshes.some((h) => h.userData.eggId === id));
+      const target = mgr && mgr.items.find((it) => it.hit.userData.eggId === id);
+      if (egg && target) {
+        const baseY = target.baseNh * 0.35 * (settings.relief / 0.35);
+        fireworks.spawn({ x: target.wx, y: baseY + 0.6, z: target.wz }, egg.hue);
+      }
+    });
 
     // teardown on visibility loss
     const vis = new IntersectionObserver(([e]) => {
