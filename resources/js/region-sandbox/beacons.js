@@ -46,7 +46,8 @@ const BEACON_FRAG = `
 export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   const { chunkAspect, zOffset, thresholds, getNowMs, reduceMotion } = opts;
   const group = new THREE.Group();
-  const color = new THREE.Color(0xffd27f); // warm "loot" tone; pops against phosphor green
+  // Beacon + sparkle tint from a tunable hue at a fixed loot-glow saturation/lightness.
+  const color = new THREE.Color().setHSL(thresholds.beaconHue / 360, 1.0, 0.75);
 
   const items = groups.map((g) => {
     const x = g.x * 2 - 1;
@@ -130,6 +131,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
 
   const update = function update(camera, w, h, relief) {
     const nowMs = getNowMs();
+    color.setHSL(thresholds.beaconHue / 360, 1.0, 0.75); // live hue for beacon + sparkle
     for (const it of items) {
       const days = recencyDays(it.g.soonest.startsAtMs, nowMs);
       const size = recencyToSize(days, thresholds);
@@ -150,6 +152,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       it.beacon.visible = true;
       it.beacon.scale.set(size.width, size.height, size.width);
       it.beacon.position.set(it.x, baseY + size.height / 2, it.z);
+      it.beaconMat.uniforms.uColor.value.copy(color);
       it.beaconMat.uniforms.uGlow.value = Math.min(1.5, 0.6 + size.glow);
       it.beaconMat.uniforms.uOpacity.value = Math.min(1, 0.55 + 0.45 * size.glow);
       it.beaconMat.uniforms.uGradient.value = thresholds.beaconGradient;

@@ -8,6 +8,7 @@ export const EVENT_DEFAULTS = {
   beaconMaxHeight: 0.25,
   beaconGlow: 1.05,
   beaconGradient: 0.85, // base->top dimming (0 = flat, ~0.95 = top near-black)
+  beaconHue: 39, // degrees; ~warm gold by default (matches the original 0xffd27f)
   sparkleIntensity: 3.4,
   sparkleSize: 0.008,
   sparkleSpeed: 1.15,
