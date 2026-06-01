@@ -3,6 +3,8 @@ import { createWorld, createChunkContent } from './scene.js';
 import { createChunkLabels } from './labels.js';
 import { createControls } from './controls.js';
 import { createAsciiPass } from './ascii-pass.js';
+import { createChunkBeacons } from './beacons.js';
+import { EVENT_DEFAULTS, groupByLocation, projectEventToCorridor } from './events.js';
 
 /** Maps a layer name to its handle key on createChunkContent's `handles`. */
 const LAYER_HANDLE = {
@@ -36,6 +38,36 @@ export async function mountRegionSandbox(root) {
   try {
     const base = root.dataset.assets;
     const manifest = await fetch(`${base}/corridor/manifest.json`).then((r) => r.json());
+
+    // Events are optional: only when a same-origin endpoint is provided. Failures degrade to none.
+    const eventsEndpoint = root.dataset.eventsEndpoint;
+    let allEvents = [];
+    if (eventsEndpoint) {
+      try {
+        const raw = await fetch(eventsEndpoint).then((r) => (r.ok ? r.json() : []));
+        allEvents = raw.map((e) => ({
+          slug: e.slug, title: e.title, location: e.location, url: e.url,
+          lat: e.lat, lng: e.lng, startsAtMs: Date.parse(e.starts_at),
+        }));
+      } catch (err) {
+        console.warn('[region-sandbox] events fetch failed; rendering without markers', err);
+      }
+    }
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const eventThresholds = { ...EVENT_DEFAULTS };
+    let eventsVisible = true;
+
+    // chunkIndex -> array of {…event, x, z} in chunk-local [0,1]; skip out-of-bbox.
+    const eventsByChunk = new Map();
+    for (const ev of allEvents) {
+      const p = projectEventToCorridor(ev, manifest);
+      if (!p) {
+        console.warn(`[region-sandbox] event "${ev.title}" outside corridor bbox — skipped`);
+        continue;
+      }
+      if (!eventsByChunk.has(p.chunkIndex)) { eventsByChunk.set(p.chunkIndex, []); }
+      eventsByChunk.get(p.chunkIndex).push({ ...ev, x: p.x, z: p.z });
+    }
 
     const chunkCount = manifest.chunkCount;
     const chunkAspect = manifest.chunkAspect;
@@ -73,7 +105,7 @@ export async function mountRegionSandbox(root) {
       },
     };
 
-    /** index -> { content, labels } */
+    /** index -> { content, labels, beacons } */
     const loaded = new Map();
     const loading = new Set();
 
@@ -111,7 +143,22 @@ export async function mountRegionSandbox(root) {
           zOffset: i * chunkZSpan,
         });
 
-        loaded.set(i, { content, labels });
+        const chunkEvents = eventsByChunk.get(i) ?? [];
+        const groups = groupByLocation(chunkEvents); // each carries chunk-local x,z
+        let beacons = null;
+        if (groups.length > 0) {
+          beacons = createChunkBeacons(labelsEl, chunk.heightmap, groups, {
+            chunkAspect,
+            zOffset: i * chunkZSpan,
+            thresholds: eventThresholds,
+            getNowMs: () => Date.now(),
+            reduceMotion,
+          });
+          beacons.group.visible = eventsVisible;
+          worldGroup.add(beacons.group);
+        }
+
+        loaded.set(i, { content, labels, beacons });
       } catch (err) {
         console.error(`[region-sandbox] failed to load chunk ${i}`, err);
       } finally {
@@ -148,8 +195,9 @@ export async function mountRegionSandbox(root) {
       controls.update();
       stream();
       const w = canvas.clientWidth, h = canvas.clientHeight;
-      for (const { labels } of loaded.values()) {
+      for (const { labels, beacons } of loaded.values()) {
         labels.update(camera, w, h, settings.relief);
+        if (beacons) { beacons.update(camera, w, h, settings.relief); }
       }
       ascii.render();
     };
@@ -192,6 +240,18 @@ export async function mountRegionSandbox(root) {
           }
         }
       },
+      setEventsVisible(on) {
+        eventsVisible = on;
+        for (const { beacons } of loaded.values()) {
+          if (beacons) { beacons.group.visible = on; }
+        }
+      },
+      setMarkerHorizon(v) { eventThresholds.markerHorizon = v; },
+      setLabelHorizon(v) { eventThresholds.labelHorizon = v; },
+      setSparkleHorizon(v) { eventThresholds.sparkleHorizon = v; },
+      setSparkleIntensity(v) { eventThresholds.sparkleIntensity = v; },
+      setBeaconHeight(v) { eventThresholds.beaconMaxHeight = v; },
+      setBeaconGlow(v) { eventThresholds.beaconGlow = v; },
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
@@ -213,6 +273,13 @@ export async function mountRegionSandbox(root) {
           'water-stream': settings.layers['water-stream'],
           'water-area': settings.layers['water-area'],
           terrain: settings.layers.terrain,
+          events: eventsVisible,
+          markerHorizon: eventThresholds.markerHorizon,
+          labelHorizon: eventThresholds.labelHorizon,
+          sparkleHorizon: eventThresholds.sparkleHorizon,
+          sparkleIntensity: eventThresholds.sparkleIntensity,
+          beaconHeight: eventThresholds.beaconMaxHeight,
+          beaconGlow: eventThresholds.beaconGlow,
         };
       },
     };
