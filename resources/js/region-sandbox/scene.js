@@ -76,18 +76,18 @@ export function sampleHeight(heightmap, nx, nz) {
 /**
  * Builds a single chunk's content (terrain mesh + batched features) into a group.
  * Does NOT add the group to the scene — the chunk manager positions it and adds it
- * to the worldGroup. Terrain spans X [-1,1] and Z [-chunkAspect, chunkAspect].
+ * to the worldGroup. Geometry is centered on the local origin.
  *
  * @param {{width:number,height:number,data:number[]}} heightmap globally-normalized heights
  * @param {Array} features local-normalized feature coords
- * @param {{ stdMaterial: THREE.Material, elevMaterial: THREE.Material, chunkAspect: number, useElev: boolean }} opts
+ * @param {{ stdMaterial: THREE.Material, elevMaterial: THREE.Material, width: number, depth: number, useElev: boolean }} opts
  * @returns {{ group: THREE.Group, terrain: THREE.Mesh, handles: { roadMajor?: THREE.LineSegments, roadSub?: THREE.LineSegments, waterRiver?: THREE.LineSegments, waterStream?: THREE.LineSegments, waterArea?: THREE.Mesh }, dispose: () => void }}
  */
-export function createChunkContent(heightmap, features, { stdMaterial, elevMaterial, chunkAspect, useElev }) {
+export function createChunkContent(heightmap, features, { stdMaterial, elevMaterial, width: worldW, depth: worldD, useElev }) {
   const { width, height, data } = heightmap;
 
-  // Plane spans [-1,1] in X and [-chunkAspect, chunkAspect] in Z; segments = grid cells.
-  const geo = new THREE.PlaneGeometry(2, 2 * chunkAspect, width - 1, height - 1);
+  // Plane spans worldW in X and worldD in Z, centered on local origin; segments = grid cells.
+  const geo = new THREE.PlaneGeometry(worldW, worldD, width - 1, height - 1);
   geo.rotateX(-Math.PI / 2); // lay flat: XZ ground plane
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
@@ -99,7 +99,7 @@ export function createChunkContent(heightmap, features, { stdMaterial, elevMater
   const group = new THREE.Group();
   group.add(terrain);
 
-  const handles = addChunkFeatures(group, heightmap, features, chunkAspect);
+  const handles = addChunkFeatures(group, heightmap, features, worldW, worldD);
 
   // Geometries created for this chunk, for disposal.
   const geometries = [geo];
@@ -120,9 +120,9 @@ export function createChunkContent(heightmap, features, { stdMaterial, elevMater
 
 /**
  * Adds tiered road + water features draped just above the terrain, batched per kind.
- * Coords are local-normalized [0,1]; mapped x=nx*2-1, z=(nz*2-1)*chunkAspect.
+ * Coords are local-normalized [0,1]; mapped x=(nx-0.5)*worldW, z=(nz-0.5)*worldD.
  */
-function addChunkFeatures(group, heightmap, features, chunkAspect) {
+function addChunkFeatures(group, heightmap, features, worldW, worldD) {
   const lineVerts = { 'road-major': [], 'road-sub': [], 'water-river': [], 'water-stream': [] };
 
   const areaPositions = [];
@@ -154,9 +154,9 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
       const base = areaPositions.length / 3;
       for (const [nx, nz] of ring) {
         areaPositions.push(
-          nx * 2 - 1,
+          (nx - 0.5) * worldW,
           sampleHeight(heightmap, nx, nz) * RELIEF + 0.005,
-          (nz * 2 - 1) * chunkAspect,
+          (nz - 0.5) * worldD,
         );
       }
       for (const [a, b, c] of tris) {
@@ -168,9 +168,9 @@ function addChunkFeatures(group, heightmap, features, chunkAspect) {
     const target = lineVerts[f.kind];
     if (!target) { continue; }
     const pts = f.coords.map(([nx, nz]) => [
-      nx * 2 - 1,
+      (nx - 0.5) * worldW,
       sampleHeight(heightmap, nx, nz) * RELIEF + 0.01,
-      (nz * 2 - 1) * chunkAspect,
+      (nz - 0.5) * worldD,
     ]);
     for (let i = 0; i + 1 < pts.length; i++) {
       target.push(pts[i][0], pts[i][1], pts[i][2], pts[i + 1][0], pts[i + 1][1], pts[i + 1][2]);
