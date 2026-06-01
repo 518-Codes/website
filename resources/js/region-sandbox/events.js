@@ -16,6 +16,7 @@ export const EVENT_DEFAULTS = {
   sparkleSpeed: 0.95,
   sparkleVolume: 0.92,
   spotlightBoost: 1.6,
+  easterEggSize: 0.12, // spotlight shaft height (world units); ~the smallest event beacon
 };
 
 /** Fractional days from `nowMs` to `startsAtMs`. */

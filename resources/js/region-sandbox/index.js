@@ -52,8 +52,8 @@ export async function mountRegionSandbox(root) {
     const manifest = await fetch(`${base}/corridor/manifest.json`).then((r) => r.json());
 
     const EGGS = [
-      { id: 'marcy', lat: 44.1126, lng: -73.9237, hue: 0.33 },     // Mt Marcy — green
-      { id: 'montauk', lat: 41.0715, lng: -71.8576, hue: 0.58 },   // Montauk Point — cyan
+      { id: 'marcy', name: 'Mt Marcy', lat: 44.1126, lng: -73.9237, hue: 0.33 },        // green
+      { id: 'montauk', name: 'Montauk Point', lat: 41.0715, lng: -71.8576, hue: 0.58 }, // cyan
     ];
 
     // Events are optional: only when a same-origin endpoint is provided. Failures degrade to none.
@@ -98,8 +98,12 @@ export async function mountRegionSandbox(root) {
 
     const fireworks = createFireworks(worldGroup, { reduceMotion });
     // Eggs are placed when their containing chunk loads (need its heightmap); kept here.
-    const eggManagers = []; // { update(relief), hitMeshes }
+    const eggManagers = []; // { update(camera,w,h,relief,hoveredId), hitMeshes, items }
     const eggHitMeshes = [];
+    let hoveredEggId = null; // set by the canvas pointermove raycast below
+    const beaconHitMeshes = []; // hover hit-volumes across all loaded chunks' beacons
+    let hoveredBeaconKey = null; // hovering a beacon previews its sparkles ("close-by")
+    const hoverRay = new THREE.Raycaster();
 
     const labelsEl = root.querySelector('.region-labels');
 
@@ -209,15 +213,16 @@ export async function mountRegionSandbox(root) {
           });
           beacons.group.visible = eventsVisible;
           worldGroup.add(beacons.group);
+          beaconHitMeshes.push(...beacons.hitMeshes);
         }
 
         for (const egg of EGGS) {
           const p = projectEventToCorridor({ lat: egg.lat, lng: egg.lng }, manifest);
           if (!p || p.chunkIndex !== i) { continue; }
           const mgr = createEasterEggs(worldGroup, [{
-            id: egg.id, x: world.x, z: world.z, w: world.w, d: world.d,
+            id: egg.id, name: egg.name, x: world.x, z: world.z, w: world.w, d: world.d,
             localX: p.x, localZ: p.z, heightmap: chunk.heightmap, hue: egg.hue,
-          }]);
+          }], { thresholds: eventThresholds, labelsEl });
           eggManagers.push(mgr);
           eggHitMeshes.push(...mgr.hitMeshes);
         }
@@ -262,13 +267,28 @@ export async function mountRegionSandbox(root) {
       const w = canvas.clientWidth, h = canvas.clientHeight;
       for (const { labels, beacons } of loaded.values()) {
         labels.update(camera, w, h, settings.relief);
-        if (beacons) { beacons.update(camera, w, h, settings.relief); }
+        if (beacons) { beacons.update(camera, w, h, settings.relief, hoveredBeaconKey); }
       }
-      for (const mgr of eggManagers) { mgr.update(settings.relief); }
+      for (const mgr of eggManagers) { mgr.update(camera, w, h, settings.relief, hoveredEggId); }
       fireworks.update(1 / 60);
       ascii.render();
     };
     tick();
+
+    // Hover: raycast on move so the egg's name label shows (and the cursor hints clickable).
+    canvas.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const ndc = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
+      };
+      hoveredEggId = hitTestEggs(ndc, camera, eggHitMeshes);
+      // Beacon hover (previews sparkles); only when events are shown.
+      hoverRay.setFromCamera(ndc, camera);
+      const bHit = eventsVisible ? hoverRay.intersectObjects(beaconHitMeshes, false) : [];
+      hoveredBeaconKey = bHit.length ? bHit[0].object.userData.beaconKey : null;
+      canvas.style.cursor = (hoveredEggId || hoveredBeaconKey) ? 'pointer' : '';
+    });
 
     // Easter-egg clicks: a pointerup that didn't drag → raycast against egg hit meshes.
     let downX = 0, downY = 0, downT = 0;
@@ -288,7 +308,7 @@ export async function mountRegionSandbox(root) {
       const target = mgr && mgr.items.find((it) => it.hit.userData.eggId === id);
       if (egg && target) {
         const baseY = target.baseNh * 0.35 * (settings.relief / 0.35);
-        fireworks.spawn({ x: target.wx, y: baseY + 0.6, z: target.wz }, egg.hue);
+        fireworks.spawn({ x: target.wx, y: baseY + eventThresholds.easterEggSize, z: target.wz }, egg.hue);
       }
     });
 
@@ -357,6 +377,7 @@ export async function mountRegionSandbox(root) {
       setBeaconHue(v) { eventThresholds.beaconHue = v; },
       setBeaconSaturation(v) { eventThresholds.beaconSaturation = v; },
       setBeaconCone(on) { eventThresholds.beaconCone = on; },
+      setEasterEggSize(v) { eventThresholds.easterEggSize = v; },
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
@@ -394,6 +415,7 @@ export async function mountRegionSandbox(root) {
           beaconHue: eventThresholds.beaconHue,
           beaconSaturation: eventThresholds.beaconSaturation,
           beaconCone: eventThresholds.beaconCone,
+          easterEggSize: eventThresholds.easterEggSize,
           ...glow,
         };
       },

@@ -22,6 +22,7 @@ const SLIDERS = [
   ['beaconGradient', 'setBeaconGradient'],
   ['beaconHue', 'setBeaconHue'],
   ['beaconSaturation', 'setBeaconSaturation'],
+  ['easterEggSize', 'setEasterEggSize'],
 ];
 const TOGGLES = [
   ['mono', 'setMono'],

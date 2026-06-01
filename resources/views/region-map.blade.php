@@ -652,6 +652,14 @@
                 <input type="checkbox" id="ctl-beaconCone">
                 <span class="ctl-check-label">cone beacon (off = square)</span>
             </label>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-easterEggSize">easter-egg spotlight size</label>
+                    <span class="ctl-val" id="val-easterEggSize">—</span>
+                </div>
+                <input type="range" id="ctl-easterEggSize" min="0.02" max="0.6" step="0.01">
+            </div>
         </div>
 
         <div class="panel-section">

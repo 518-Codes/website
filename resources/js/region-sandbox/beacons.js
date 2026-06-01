@@ -54,6 +54,10 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   // cells (a sharp apex is a sub-cell point); the box is the alternative square shape.
   const coneGeo = new THREE.CylinderGeometry(0.3, 1, 1, 16, 6);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+  // Shared invisible hover hit-volume (unit cylinder, scaled per beacon) + its raycast list.
+  const hitGeo = new THREE.CylinderGeometry(1, 1, 1, 8);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hitMeshes = [];
 
   const items = groups.map((g) => {
     const x = world.x + (g.x - 0.5) * world.w;
@@ -75,6 +79,12 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     });
     const beacon = new THREE.Mesh(thresholds.beaconCone ? coneGeo : boxGeo, beaconMat);
     group.add(beacon);
+
+    // Invisible, generous hover hit-volume so even small/far beacons are hoverable.
+    const hit = new THREE.Mesh(hitGeo, hitMat);
+    hit.userData.beaconKey = g.key;
+    group.add(hit);
+    hitMeshes.push(hit);
 
     // Sparkle emitter: a constant stream of fine glints rising from the base centre
     // outward into a short, randomized dome. Per-particle direction + phase offset are
@@ -123,7 +133,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     });
 
     return {
-      g, x, z, baseY, beacon, beaconMat, sparkles, sparkGeo, sparkMat,
+      g, x, z, baseY, beacon, beaconMat, hit, sparkles, sparkGeo, sparkMat,
       sparkPos, sparkCol, sparkAz, sparkEl, sparkOff, sparkSpd, sparkRad,
       el, popover, world: new THREE.Vector3(x, baseY, z),
     };
@@ -131,7 +141,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
 
   const v = new THREE.Vector3();
 
-  const update = function update(camera, w, h, relief) {
+  const update = function update(camera, w, h, relief, hoveredKey) {
     const nowMs = getNowMs();
     color.setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75); // live hue+sat
     // CSS forms of the live beacon color so the HTML labels match their beacon.
@@ -144,11 +154,13 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
 
       if (!size.visible) {
         it.beacon.visible = false;
+        it.hit.visible = false;
         it.sparkles.visible = false;
         it.el.style.display = 'none';
         it.popover.classList.remove('open');
         continue;
       }
+      const hovered = hoveredKey != null && hoveredKey === it.g.key;
 
       const yScale = relief / RELIEF;
       const baseY = it.baseY * yScale;
@@ -164,14 +176,21 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       it.beaconMat.uniforms.uOpacity.value = Math.min(1, 0.55 + 0.45 * size.glow);
       it.beaconMat.uniforms.uGradient.value = thresholds.beaconGradient;
 
+      // Hover hit-volume: track the beacon, generous radius so a small/far one is hoverable.
+      it.hit.visible = true;
+      const hitR = Math.max(0.04, size.width * 4);
+      const hitH = Math.max(0.15, size.height + 0.05);
+      it.hit.scale.set(hitR, hitH, hitR);
+      it.hit.position.set(it.x, baseY + hitH / 2, it.z);
+
       // Sparkle: a subtle constant stream rising from the base centre outward into a
-      // short, randomized dome. Only within the sparkle horizon; density + brightness
-      // ramp in as the event nears.
+      // short, randomized dome. On within the sparkle horizon OR while hovered (preview
+      // it as a close-by event); density + brightness ramp in as the event nears.
       const sparkDays = thresholds.sparkleHorizon;
-      const sparkOn = !reduceMotion && days <= sparkDays;
+      const sparkOn = !reduceMotion && (days <= sparkDays || hovered);
       it.sparkles.visible = sparkOn;
       if (sparkOn) {
-        const ramp = 1 - Math.min(1, Math.max(0, days) / sparkDays); // 0 far .. 1 near
+        const ramp = hovered ? 1 : 1 - Math.min(1, Math.max(0, days) / sparkDays); // 0 far .. 1 near
         const count = Math.max(1, Math.round(SPARKLE_MAX * thresholds.sparkleVolume));
         it.sparkGeo.setDrawRange(0, count);
         it.sparkMat.size = thresholds.sparkleSize;
@@ -242,7 +261,9 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     }
     coneGeo.dispose(); // shared beacon shapes
     boxGeo.dispose();
+    hitGeo.dispose();
+    hitMat.dispose();
   };
 
-  return { group, items, update, dispose };
+  return { group, items, update, dispose, hitMeshes };
 }
