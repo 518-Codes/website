@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { sampleHeight, RELIEF } from './scene.js';
 import { recencyDays, recencyToSize, countdownLabel } from './events.js';
 
-const SPARKLE_MAX = 20; // particles per sparkling beacon
+const SPARKLE_MAX = 40; // particle pool per sparkling beacon (volume slider gates how many draw)
 
 /** Escape admin-entered text before innerHTML interpolation (text + double-quoted attrs). */
 function escapeHtml(s) {
@@ -20,7 +20,7 @@ function applyVerticalGradient(geo) {
   const colors = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     const t = pos.getY(i) + 0.5;   // 0 at base, 1 at apex (unit cone spans -0.5..+0.5)
-    const b = 1.0 - 0.8 * t;       // 1.0 at base -> 0.2 at apex
+    const b = 1.0 - 0.95 * t;      // 1.0 at base -> 0.05 at apex (strong, visible falloff)
     colors[i * 3] = b;
     colors[i * 3 + 1] = b;
     colors[i * 3 + 2] = b;
@@ -71,7 +71,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
     const sparkRad = new Float32Array(SPARKLE_MAX);  // per-particle reach scale
     for (let i = 0; i < SPARKLE_MAX; i++) {
       sparkAz[i] = Math.random() * 6.2831853;
-      sparkEl[i] = Math.random() * Math.random() * 1.4; // bias toward the dome floor
+      sparkEl[i] = (0.45 + Math.random() * 0.55) * (Math.PI / 2); // 40°..90°: always upward
       sparkOff[i] = Math.random();
       sparkSpd[i] = 0.7 + Math.random() * 0.7;
       sparkRad[i] = 0.6 + Math.random() * 0.8;
@@ -144,18 +144,18 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       const sparkOn = !reduceMotion && days <= sparkDays;
       it.sparkles.visible = sparkOn;
       if (sparkOn) {
-        const intensity = (1 - Math.min(1, Math.max(0, days) / sparkDays)) * thresholds.sparkleIntensity;
-        const count = Math.max(1, Math.round(SPARKLE_MAX * (0.35 + 0.65 * intensity)));
+        const ramp = 1 - Math.min(1, Math.max(0, days) / sparkDays); // 0 far .. 1 near
+        const count = Math.max(1, Math.round(SPARKLE_MAX * thresholds.sparkleVolume));
         it.sparkGeo.setDrawRange(0, count);
-        it.sparkMat.size = 0.012 + 0.008 * intensity;
+        it.sparkMat.size = thresholds.sparkleSize;
         it.sparkles.position.set(it.x, baseY, it.z);
 
         const tSec = nowMs / 1000;
         const domeR = 0.05 + size.width * 3;       // short, subtle footprint
-        const domeH = domeR * 0.6;                 // flatter than it is wide
-        const peak = 0.18 + 0.32 * intensity;      // max per-particle brightness (subtle)
+        const domeH = domeR * 1.3;                 // taller than wide -> upward fountain
+        const peak = thresholds.sparkleIntensity * (0.35 + 0.65 * ramp); // brightness, ramps w/ recency
         for (let i = 0; i < count; i++) {
-          const phase = (tSec * 0.35 * it.sparkSpd[i] + it.sparkOff[i]) % 1;
+          const phase = (tSec * 0.35 * thresholds.sparkleSpeed * it.sparkSpd[i] + it.sparkOff[i]) % 1;
           const reach = phase * it.sparkRad[i];
           const ce = Math.cos(it.sparkEl[i]);
           it.sparkPos[i * 3] = Math.cos(it.sparkAz[i]) * ce * domeR * reach;

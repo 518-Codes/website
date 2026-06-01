@@ -250,6 +250,9 @@ export async function mountRegionSandbox(root) {
       setLabelHorizon(v) { eventThresholds.labelHorizon = v; },
       setSparkleHorizon(v) { eventThresholds.sparkleHorizon = v; },
       setSparkleIntensity(v) { eventThresholds.sparkleIntensity = v; },
+      setSparkleSize(v) { eventThresholds.sparkleSize = v; },
+      setSparkleSpeed(v) { eventThresholds.sparkleSpeed = v; },
+      setSparkleVolume(v) { eventThresholds.sparkleVolume = v; },
       setBeaconHeight(v) { eventThresholds.beaconMaxHeight = v; },
       setBeaconGlow(v) { eventThresholds.beaconGlow = v; },
       getValues() {
@@ -278,6 +281,9 @@ export async function mountRegionSandbox(root) {
           labelHorizon: eventThresholds.labelHorizon,
           sparkleHorizon: eventThresholds.sparkleHorizon,
           sparkleIntensity: eventThresholds.sparkleIntensity,
+          sparkleSize: eventThresholds.sparkleSize,
+          sparkleSpeed: eventThresholds.sparkleSpeed,
+          sparkleVolume: eventThresholds.sparkleVolume,
           beaconHeight: eventThresholds.beaconMaxHeight,
           beaconGlow: eventThresholds.beaconGlow,
         };

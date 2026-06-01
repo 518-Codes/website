@@ -14,6 +14,9 @@ const SLIDERS = [
   ['labelHorizon', 'setLabelHorizon'],
   ['sparkleHorizon', 'setSparkleHorizon'],
   ['sparkleIntensity', 'setSparkleIntensity'],
+  ['sparkleSize', 'setSparkleSize'],
+  ['sparkleSpeed', 'setSparkleSpeed'],
+  ['sparkleVolume', 'setSparkleVolume'],
   ['beaconHeight', 'setBeaconHeight'],
   ['beaconGlow', 'setBeaconGlow'],
 ];

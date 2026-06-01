@@ -8,6 +8,9 @@ export const EVENT_DEFAULTS = {
   beaconMaxHeight: 0.5,
   beaconGlow: 1.0,
   sparkleIntensity: 1.0,
+  sparkleSize: 0.016,
+  sparkleSpeed: 1.0,
+  sparkleVolume: 0.5,
   spotlightBoost: 1.6,
 };
 

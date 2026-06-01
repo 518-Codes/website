@@ -539,7 +539,31 @@
                     <label class="ctl-label" for="ctl-sparkleIntensity">sparkle intensity</label>
                     <span class="ctl-val" id="val-sparkleIntensity">—</span>
                 </div>
-                <input type="range" id="ctl-sparkleIntensity" min="0" max="2" step="0.05">
+                <input type="range" id="ctl-sparkleIntensity" min="0" max="6" step="0.1">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-sparkleSize">sparkle size</label>
+                    <span class="ctl-val" id="val-sparkleSize">—</span>
+                </div>
+                <input type="range" id="ctl-sparkleSize" min="0.004" max="0.05" step="0.002">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-sparkleSpeed">sparkle speed</label>
+                    <span class="ctl-val" id="val-sparkleSpeed">—</span>
+                </div>
+                <input type="range" id="ctl-sparkleSpeed" min="0" max="3" step="0.05">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-sparkleVolume">sparkle volume</label>
+                    <span class="ctl-val" id="val-sparkleVolume">—</span>
+                </div>
+                <input type="range" id="ctl-sparkleVolume" min="0" max="1" step="0.02">
             </div>
 
             <div class="ctl-row">
