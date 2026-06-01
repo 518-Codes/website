@@ -45,14 +45,17 @@ test('countdownLabel reads naturally', () => {
 
 test('groupByLocation collapses same-location events, soonest first', () => {
   const groups = groupByLocation([
-    { location: 'A', lat: 1, lng: 2, startsAtMs: 500 },
-    { location: 'A', lat: 1, lng: 2, startsAtMs: 200 },
-    { location: 'B', lat: 3, lng: 4, startsAtMs: 300 },
+    { location: 'A', lat: 1, lng: 2, x: 0.4, z: 0.7, startsAtMs: 500 },
+    { location: 'A', lat: 1, lng: 2, x: 0.4, z: 0.7, startsAtMs: 200 },
+    { location: 'B', lat: 3, lng: 4, x: 0.1, z: 0.2, startsAtMs: 300 },
   ]);
   expect(groups).toHaveLength(2);
   const a = groups.find((g) => g.location === 'A');
   expect(a.events).toHaveLength(2);
   expect(a.soonest.startsAtMs).toBe(200);
+  // Chunk-local coords must carry through — Task 6 beacon placement depends on it.
+  expect(a.x).toBe(0.4);
+  expect(a.z).toBe(0.7);
 });
 
 test('projectEventToCorridor returns chunk + local coords, null when out of bbox', () => {
@@ -66,6 +69,11 @@ test('projectEventToCorridor returns chunk + local coords, null when out of bbox
   expect(p.chunkIndex).toBe(0);
   expect(p.x).toBeCloseTo(0, 5);
   expect(p.z).toBeCloseTo(0, 5);
+  // South-east corner -> last chunk, local (1,1).
+  const se = projectEventToCorridor({ lat: 40.55, lng: -73.4 }, manifest);
+  expect(se.chunkIndex).toBe(7);
+  expect(se.x).toBeCloseTo(1, 5);
+  expect(se.z).toBeCloseTo(1, 5);
   // Outside the bbox -> null.
   expect(projectEventToCorridor({ lat: 50, lng: -74 }, manifest)).toBeNull();
 });
