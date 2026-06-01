@@ -46,8 +46,8 @@ const BEACON_FRAG = `
 export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   const { chunkAspect, zOffset, thresholds, getNowMs, reduceMotion } = opts;
   const group = new THREE.Group();
-  // Beacon + sparkle tint from a tunable hue at a fixed loot-glow saturation/lightness.
-  const color = new THREE.Color().setHSL(thresholds.beaconHue / 360, 1.0, 0.75);
+  // Beacon + sparkle tint from a tunable hue + saturation at a fixed loot-glow lightness.
+  const color = new THREE.Color().setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75);
 
   const items = groups.map((g) => {
     const x = g.x * 2 - 1;
@@ -131,7 +131,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
 
   const update = function update(camera, w, h, relief) {
     const nowMs = getNowMs();
-    color.setHSL(thresholds.beaconHue / 360, 1.0, 0.75); // live hue for beacon + sparkle
+    color.setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75); // live hue+sat
     for (const it of items) {
       const days = recencyDays(it.g.soonest.startsAtMs, nowMs);
       const size = recencyToSize(days, thresholds);
