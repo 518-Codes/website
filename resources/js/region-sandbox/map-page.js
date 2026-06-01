@@ -19,6 +19,7 @@ const SLIDERS = [
   ['sparkleVolume', 'setSparkleVolume'],
   ['beaconHeight', 'setBeaconHeight'],
   ['beaconGlow', 'setBeaconGlow'],
+  ['beaconGradient', 'setBeaconGradient'],
 ];
 const TOGGLES = [
   ['mono', 'setMono'],

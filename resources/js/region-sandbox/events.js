@@ -7,6 +7,7 @@ export const EVENT_DEFAULTS = {
   beaconMinHeight: 0.12,
   beaconMaxHeight: 0.5,
   beaconGlow: 1.0,
+  beaconGradient: 0.45, // base->top dimming (0 = flat, ~0.95 = top near-black)
   sparkleIntensity: 1.0,
   sparkleSize: 0.016,
   sparkleSpeed: 1.0,

@@ -25,10 +25,10 @@ const BEACON_VERT = `
 const BEACON_FRAG = `
   precision highp float;
   uniform vec3 uColor;
-  uniform float uGlow, uOpacity;
+  uniform float uGlow, uOpacity, uGradient;
   varying float vT;
   void main(){
-    float b = 1.0 - 0.6 * vT;              // bright base (1.0) -> dim but visible top (0.4)
+    float b = 1.0 - uGradient * vT;        // base 1.0 -> top (1.0 - uGradient); 0 = flat
     gl_FragColor = vec4(uColor * b * uGlow, uOpacity);
   }`;
 
@@ -64,6 +64,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
         uColor: { value: color.clone() },
         uGlow: { value: 1.0 },
         uOpacity: { value: 1.0 },
+        uGradient: { value: thresholds.beaconGradient },
       },
       transparent: true,
       vertexShader: BEACON_VERT,
@@ -151,6 +152,7 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
       it.beacon.position.set(it.x, baseY + size.height / 2, it.z);
       it.beaconMat.uniforms.uGlow.value = Math.min(1.5, 0.6 + size.glow);
       it.beaconMat.uniforms.uOpacity.value = Math.min(1, 0.55 + 0.45 * size.glow);
+      it.beaconMat.uniforms.uGradient.value = thresholds.beaconGradient;
 
       // Sparkle: a subtle constant stream rising from the base centre outward into a
       // short, randomized dome. Only within the sparkle horizon; density + brightness

@@ -255,6 +255,7 @@ export async function mountRegionSandbox(root) {
       setSparkleVolume(v) { eventThresholds.sparkleVolume = v; },
       setBeaconHeight(v) { eventThresholds.beaconMaxHeight = v; },
       setBeaconGlow(v) { eventThresholds.beaconGlow = v; },
+      setBeaconGradient(v) { eventThresholds.beaconGradient = v; },
       getValues() {
         const a = ascii.getValues();
         const c = controls.getValues();
@@ -286,6 +287,7 @@ export async function mountRegionSandbox(root) {
           sparkleVolume: eventThresholds.sparkleVolume,
           beaconHeight: eventThresholds.beaconMaxHeight,
           beaconGlow: eventThresholds.beaconGlow,
+          beaconGradient: eventThresholds.beaconGradient,
         };
       },
     };
