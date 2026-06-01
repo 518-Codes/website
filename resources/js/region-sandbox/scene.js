@@ -65,12 +65,23 @@ export function createWorld(scene) {
   return { key, ambient, stdMaterial, elevMaterial, worldGroup };
 }
 
-/** Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1]. */
+/**
+ * Sample terrain height (normalized 0..1) at scene-normalized (nx,nz) in [0,1].
+ * Bilinear, so draped features hug the interpolated terrain surface instead of
+ * snapping to the nearest grid cell (nearest-neighbor floats lines off slopes).
+ */
 export function sampleHeight(heightmap, nx, nz) {
   const { width, height, data } = heightmap;
-  const cx = Math.min(width - 1, Math.max(0, Math.round(nx * (width - 1))));
-  const cz = Math.min(height - 1, Math.max(0, Math.round(nz * (height - 1))));
-  return data[cz * width + cx];
+  const fx = Math.min(width - 1, Math.max(0, nx * (width - 1)));
+  const fz = Math.min(height - 1, Math.max(0, nz * (height - 1)));
+  const x0 = Math.floor(fx), z0 = Math.floor(fz);
+  const x1 = Math.min(width - 1, x0 + 1), z1 = Math.min(height - 1, z0 + 1);
+  const tx = fx - x0, tz = fz - z0;
+  const h00 = data[z0 * width + x0], h10 = data[z0 * width + x1];
+  const h01 = data[z1 * width + x0], h11 = data[z1 * width + x1];
+  const top = h00 + (h10 - h00) * tx;
+  const bottom = h01 + (h11 - h01) * tx;
+  return top + (bottom - top) * tz;
 }
 
 /**
