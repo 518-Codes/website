@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 const GLYPHS = ' .:-=+*#%@'; // sparse -> dense
 const CELL = 3; // screen px per glyph cell (smaller = higher ASCII resolution)
-const ATLAS_CELL = 16; // px per glyph in the atlas texture (kept high for crisp glyphs)
+const ATLAS_CELL = 24; // px per glyph in the atlas texture (kept high for crisp glyphs)
 
 /** Renders GLYPHS into a single-row atlas texture (N cells wide). */
 function makeAtlas() {
@@ -12,7 +12,10 @@ function makeAtlas() {
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, c.width, c.height);
   ctx.fillStyle = '#fff';
-  ctx.font = `${ATLAS_CELL}px monospace`;
+  // Oversize the font so glyph ink fills the cell height — at 1:1 the ink only covers
+  // the middle of the cell, leaving black strips top/bottom that read as gaps between
+  // rows ("rings of nothingness") on solid vertical features.
+  ctx.font = `${Math.round(ATLAS_CELL * 1.3)}px monospace`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < n; i++) ctx.fillText(GLYPHS[i], i * ATLAS_CELL + ATLAS_CELL / 2, ATLAS_CELL / 2);
   const tex = new THREE.CanvasTexture(c);
@@ -43,6 +46,7 @@ export function createAsciiPass(renderer, scene, camera) {
       uGlow: { value: 0.25 },
       uMono: { value: 0.0 },
       uElevation: { value: 0.0 },
+      uMinLum: { value: 0.06 }, // below this -> blank (background); above -> at least the faintest glyph
     },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
     fragmentShader: `
@@ -50,7 +54,7 @@ export function createAsciiPass(renderer, scene, camera) {
       varying vec2 vUv;
       uniform sampler2D uScene, uAtlas;
       uniform vec2 uResolution;
-      uniform float uCell, uCount, uGlow, uMono, uElevation;
+      uniform float uCell, uCount, uGlow, uMono, uElevation, uMinLum;
       uniform vec3 uPhosphor;
       float lum(vec3 c){ return dot(c, vec3(0.299,0.587,0.114)); }
       void main(){
@@ -69,7 +73,9 @@ export function createAsciiPass(renderer, scene, camera) {
             if (tl > l) { l = tl; maxColor = tap; }
           }
         }
-        float gi = floor(clamp(l, 0.0, 0.999) * uCount);     // glyph index
+        float lv = clamp(l, 0.0, 0.999);
+        float gi = floor(lv * uCount);                       // glyph index
+        if (gi < 1.0 && lv > uMinLum) { gi = 1.0; }          // dim-but-present -> faintest glyph, not blank
         vec2 local = (px - cellOrigin) / uCell;               // 0..1 within cell
         vec2 atlasUv = vec2((gi + local.x) / uCount, 1.0 - local.y);
         float glyph = texture2D(uAtlas, atlasUv).r;
