@@ -56,35 +56,15 @@ export async function mountRegionSandbox(root) {
       { id: 'montauk', name: 'Montauk Point', lat: 41.0715, lng: -71.8576, hue: 0.58 }, // cyan
     ];
 
-    // Events are optional: only when a same-origin endpoint is provided. Failures degrade to none.
+    // Events are an optional overlay, fetched in the BACKGROUND (below) so a slow or
+    // unreachable endpoint never blocks the map from rendering. Beacons attach to their
+    // chunks as soon as the fetch resolves (or when a chunk loads, whichever is later).
     const eventsEndpoint = root.dataset.eventsEndpoint;
-    let allEvents = [];
-    if (eventsEndpoint) {
-      try {
-        const raw = await fetch(eventsEndpoint).then((r) => (r.ok ? r.json() : []));
-        allEvents = raw.map((e) => ({
-          slug: e.slug, title: e.title, location: e.location, url: e.url,
-          lat: e.lat, lng: e.lng, startsAtMs: Date.parse(e.starts_at),
-        }));
-      } catch (err) {
-        console.warn('[region-sandbox] events fetch failed; rendering without markers', err);
-      }
-    }
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const eventThresholds = { ...EVENT_DEFAULTS };
     let eventsVisible = true;
-
-    // chunkIndex -> array of {…event, x, z} in chunk-local [0,1]; skip out-of-bbox.
+    // chunkIndex -> array of {…event, x, z} in chunk-local [0,1]; populated when events load.
     const eventsByChunk = new Map();
-    for (const ev of allEvents) {
-      const p = projectEventToCorridor(ev, manifest);
-      if (!p) {
-        console.warn(`[region-sandbox] event "${ev.title}" outside corridor bbox — skipped`);
-        continue;
-      }
-      if (!eventsByChunk.has(p.chunkIndex)) { eventsByChunk.set(p.chunkIndex, []); }
-      eventsByChunk.get(p.chunkIndex).push({ ...ev, x: p.x, z: p.z });
-    }
 
     const projection = manifest.projection;
     const worldPath = pathPoints(manifest.path.waypoints, projection);
@@ -171,6 +151,25 @@ export async function mountRegionSandbox(root) {
       elevMaterial.uniforms.uGreen.value.copy(GREEN_BASE).multiplyScalar(g);
     };
 
+    // Build + attach a chunk's event beacons (idempotent). Called when a chunk loads and
+    // again when the background events fetch resolves, so beacons appear whichever finishes
+    // last. Uses the heightmap kept on the loaded entry.
+    const attachBeacons = (i) => {
+      const entry = loaded.get(i);
+      if (!entry || entry.beacons) { return; }
+      const chunkEvents = eventsByChunk.get(i);
+      if (!chunkEvents || chunkEvents.length === 0) { return; }
+      const beacons = createChunkBeacons(labelsEl, entry.heightmap, groupByLocation(chunkEvents), {
+        world: chunkWorlds[i],
+        thresholds: eventThresholds,
+        getNowMs: () => Date.now(),
+        reduceMotion,
+      });
+      beacons.group.visible = eventsVisible;
+      worldGroup.add(beacons.group);
+      entry.beacons = beacons;
+    };
+
     async function loadChunk(i) {
       if (i < 0 || i >= chunkCount) { return; }
       if (loaded.has(i) || loading.has(i)) { return; }
@@ -201,20 +200,6 @@ export async function mountRegionSandbox(root) {
           worldZ: world.z,
         });
 
-        const chunkEvents = eventsByChunk.get(i) ?? [];
-        const groups = groupByLocation(chunkEvents); // each carries chunk-local x,z
-        let beacons = null;
-        if (groups.length > 0) {
-          beacons = createChunkBeacons(labelsEl, chunk.heightmap, groups, {
-            world,
-            thresholds: eventThresholds,
-            getNowMs: () => Date.now(),
-            reduceMotion,
-          });
-          beacons.group.visible = eventsVisible;
-          worldGroup.add(beacons.group);
-        }
-
         for (const egg of EGGS) {
           const p = projectEventToCorridor({ lat: egg.lat, lng: egg.lng }, manifest);
           if (!p || p.chunkIndex !== i) { continue; }
@@ -228,7 +213,10 @@ export async function mountRegionSandbox(root) {
           eggHitMeshes.push(...mgr.hitMeshes);
         }
 
-        loaded.set(i, { content, labels, beacons });
+        // Terrain + labels render immediately; beacons attach now if events are already
+        // loaded, otherwise when the background fetch resolves (heightmap kept for that).
+        loaded.set(i, { content, labels, beacons: null, heightmap: chunk.heightmap });
+        attachBeacons(i);
       } catch (err) {
         console.error(`[region-sandbox] failed to load chunk ${i}`, err);
       } finally {
@@ -269,6 +257,30 @@ export async function mountRegionSandbox(root) {
     };
 
     stream();
+
+    // Background events load — never blocks the map. On resolve, bucket events per chunk
+    // and attach beacons to any already-loaded chunks (future chunks attach on load).
+    if (eventsEndpoint) {
+      fetch(eventsEndpoint)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((raw) => {
+          for (const e of raw) {
+            const ev = {
+              slug: e.slug, title: e.title, location: e.location, url: e.url,
+              lat: e.lat, lng: e.lng, startsAtMs: Date.parse(e.starts_at),
+            };
+            const p = projectEventToCorridor(ev, manifest);
+            if (!p) {
+              console.warn(`[region-sandbox] event "${ev.title}" outside corridor bbox — skipped`);
+              continue;
+            }
+            if (!eventsByChunk.has(p.chunkIndex)) { eventsByChunk.set(p.chunkIndex, []); }
+            eventsByChunk.get(p.chunkIndex).push({ ...ev, x: p.x, z: p.z });
+          }
+          for (const i of loaded.keys()) { attachBeacons(i); }
+        })
+        .catch((err) => console.warn('[region-sandbox] events fetch failed; rendering without markers', err));
+    }
 
     const resize = () => {
       const w = canvas.clientWidth, h = canvas.clientHeight;
