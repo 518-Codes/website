@@ -10,10 +10,17 @@ const SLIDERS = [
   ['orbitSpeed', 'setOrbitSpeed'],
   ['bandCount', 'setBandCount'],
   ['bandCurve', 'setBandCurve'],
+  ['markerHorizon', 'setMarkerHorizon'],
+  ['labelHorizon', 'setLabelHorizon'],
+  ['sparkleHorizon', 'setSparkleHorizon'],
+  ['sparkleIntensity', 'setSparkleIntensity'],
+  ['beaconHeight', 'setBeaconHeight'],
+  ['beaconGlow', 'setBeaconGlow'],
 ];
 const TOGGLES = [
   ['mono', 'setMono'],
   ['elevation', 'setElevation'],
+  ['events', 'setEventsVisible'],
 ];
 const LAYERS = ['road-major', 'road-sub', 'water-river', 'water-stream', 'water-area', 'terrain'];
 

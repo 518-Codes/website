@@ -106,6 +106,22 @@
             white-space: nowrap;
         }
         .region-label::after { content: '◆'; display: block; text-align: center; font-size: 11px; opacity: 0.8; }
+        .region-event-label {
+            position: absolute; transform: translate(-50%, -100%);
+            color: var(--amber); font-family: var(--font-mono); font-size: 14px;
+            font-weight: 800; letter-spacing: 0.04em; white-space: nowrap;
+            text-shadow: 0 0 8px rgba(255,182,39,0.7); cursor: pointer; pointer-events: auto;
+        }
+        .region-event-label .evt-when { display: block; font-size: 11px; font-weight: 600; opacity: 0.85; }
+        .region-event-label .evt-more { font-size: 11px; opacity: 0.8; }
+        .region-event-popover {
+            position: absolute; transform: translate(-50%, 0); display: none;
+            background: rgba(11,15,11,0.95); border: 1px solid var(--rule-2); padding: 6px 8px;
+            pointer-events: auto; z-index: 20; max-width: 240px;
+        }
+        .region-event-popover.open { display: block; }
+        .region-event-popover a { display: block; color: var(--phosphor); font-size: 12px; text-decoration: none; padding: 2px 0; }
+        .region-event-popover a:hover { text-decoration: underline; }
 
         /* Brand overlay */
         .brand-overlay {
@@ -483,6 +499,63 @@
                 <input type="checkbox" id="ctl-layer-terrain">
                 <span class="ctl-check-label">terrain</span>
             </label>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-section-title">events</div>
+
+            <label class="ctl-check-row">
+                <input type="checkbox" id="ctl-events">
+                <span class="ctl-check-label">show events</span>
+            </label>
+
+            <div class="ctl-row" style="margin-top:10px">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-markerHorizon">marker horizon (days)</label>
+                    <span class="ctl-val" id="val-markerHorizon">—</span>
+                </div>
+                <input type="range" id="ctl-markerHorizon" min="1" max="60" step="1">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-labelHorizon">label horizon (days)</label>
+                    <span class="ctl-val" id="val-labelHorizon">—</span>
+                </div>
+                <input type="range" id="ctl-labelHorizon" min="1" max="60" step="1">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-sparkleHorizon">sparkle horizon (days)</label>
+                    <span class="ctl-val" id="val-sparkleHorizon">—</span>
+                </div>
+                <input type="range" id="ctl-sparkleHorizon" min="0" max="30" step="1">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-sparkleIntensity">sparkle intensity</label>
+                    <span class="ctl-val" id="val-sparkleIntensity">—</span>
+                </div>
+                <input type="range" id="ctl-sparkleIntensity" min="0" max="2" step="0.05">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-beaconHeight">beacon max height</label>
+                    <span class="ctl-val" id="val-beaconHeight">—</span>
+                </div>
+                <input type="range" id="ctl-beaconHeight" min="0.3" max="3" step="0.05">
+            </div>
+
+            <div class="ctl-row">
+                <div class="ctl-label-row">
+                    <label class="ctl-label" for="ctl-beaconGlow">beacon glow</label>
+                    <span class="ctl-val" id="val-beaconGlow">—</span>
+                </div>
+                <input type="range" id="ctl-beaconGlow" min="0" max="2" step="0.05">
+            </div>
         </div>
 
         <div class="panel-section">

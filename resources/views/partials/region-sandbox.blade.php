@@ -9,6 +9,7 @@
             class="term-shell region-sandbox"
             data-region-sandbox
             data-assets="{{ asset('region-sandbox') }}"
+            data-events-endpoint="{{ url('/api/map-events') }}"
             data-fallback="{{ asset('region-sandbox/fallback.jpg') }}"
         >
             <div class="term-titlebar">
@@ -41,6 +42,22 @@
         white-space: nowrap;
     }
     .region-label::after { content: '◆'; display: block; text-align: center; font-size: 11px; opacity: 0.8; }
+    .region-event-label {
+        position: absolute; transform: translate(-50%, -100%);
+        color: var(--amber); font-family: var(--font-mono); font-size: 14px;
+        font-weight: 800; letter-spacing: 0.04em; white-space: nowrap;
+        text-shadow: 0 0 8px rgba(255,182,39,0.7); cursor: pointer; pointer-events: auto;
+    }
+    .region-event-label .evt-when { display: block; font-size: 11px; font-weight: 600; opacity: 0.85; }
+    .region-event-label .evt-more { font-size: 11px; opacity: 0.8; }
+    .region-event-popover {
+        position: absolute; transform: translate(-50%, 0); display: none;
+        background: rgba(11,15,11,0.95); border: 1px solid var(--rule-2); padding: 6px 8px;
+        pointer-events: auto; z-index: 20; max-width: 240px;
+    }
+    .region-event-popover.open { display: block; }
+    .region-event-popover a { display: block; color: var(--phosphor); font-size: 12px; text-decoration: none; padding: 2px 0; }
+    .region-event-popover a:hover { text-decoration: underline; }
     .region-sandbox[data-unsupported] .region-canvas { display: none; }
     .region-sandbox[data-unsupported] .region-stage { background-image: var(--fallback-img); background-size: cover; filter: grayscale(1) brightness(0.7) sepia(1) hue-rotate(70deg) saturate(3); }
 </style>
