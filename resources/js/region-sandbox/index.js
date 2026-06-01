@@ -100,8 +100,8 @@ export async function mountRegionSandbox(root) {
     // Eggs are placed when their containing chunk loads (need its heightmap); kept here.
     const eggManagers = []; // { update(camera,w,h,relief,hoveredId), hitMeshes, items }
     const eggHitMeshes = [];
+    const placedEggs = new Set(); // eggs persist across chunk eviction; place each once
     let hoveredEggId = null; // set by the canvas pointermove raycast below
-    const beaconHitMeshes = []; // hover hit-volumes across all loaded chunks' beacons
     let hoveredBeaconKey = null; // hovering a beacon previews its sparkles ("close-by")
     const hoverRay = new THREE.Raycaster();
 
@@ -213,12 +213,13 @@ export async function mountRegionSandbox(root) {
           });
           beacons.group.visible = eventsVisible;
           worldGroup.add(beacons.group);
-          beaconHitMeshes.push(...beacons.hitMeshes);
         }
 
         for (const egg of EGGS) {
           const p = projectEventToCorridor({ lat: egg.lat, lng: egg.lng }, manifest);
           if (!p || p.chunkIndex !== i) { continue; }
+          if (placedEggs.has(egg.id)) { continue; } // eggs persist; don't re-create on reload
+          placedEggs.add(egg.id);
           const mgr = createEasterEggs(worldGroup, [{
             id: egg.id, name: egg.name, x: world.x, z: world.z, w: world.w, d: world.d,
             localX: p.x, localZ: p.z, heightmap: chunk.heightmap, hue: egg.hue,
@@ -235,6 +236,21 @@ export async function mountRegionSandbox(root) {
       }
     }
 
+    // Free a chunk's geometry/materials/DOM (terrain + features + labels + beacons).
+    // Easter eggs live on worldGroup (not the chunk group) and persist.
+    const evictChunk = (i) => {
+      const entry = loaded.get(i);
+      if (!entry) { return; }
+      worldGroup.remove(entry.content.group);
+      entry.content.dispose();
+      entry.labels.destroy();
+      if (entry.beacons) {
+        worldGroup.remove(entry.beacons.group);
+        entry.beacons.dispose();
+      }
+      loaded.delete(i);
+    };
+
     const stream = () => {
       const s = controls.getS();
       let nearest = 0, best = Infinity;
@@ -243,6 +259,13 @@ export async function mountRegionSandbox(root) {
         if (d < best) { best = d; nearest = i; }
       }
       for (let i = nearest - 1; i <= nearest + 2; i++) { loadChunk(i); }
+      // Evict chunks outside a slightly wider keep-window so resident memory stays
+      // bounded (~6 chunks) no matter how far you pan — terrain+feature geometry is heavy.
+      const toEvict = [];
+      for (const i of loaded.keys()) {
+        if (i < nearest - 2 || i > nearest + 3) { toEvict.push(i); }
+      }
+      for (const i of toEvict) { evictChunk(i); }
     };
 
     stream();
@@ -283,10 +306,20 @@ export async function mountRegionSandbox(root) {
         y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
       };
       hoveredEggId = hitTestEggs(ndc, camera, eggHitMeshes);
-      // Beacon hover (previews sparkles); only when events are shown.
-      hoverRay.setFromCamera(ndc, camera);
-      const bHit = eventsVisible ? hoverRay.intersectObjects(beaconHitMeshes, false) : [];
-      hoveredBeaconKey = bHit.length ? bHit[0].object.userData.beaconKey : null;
+      // Beacon hover (previews sparkles); only when events are shown. Hit-volumes are
+      // gathered from currently-loaded chunks so eviction never leaves stale references.
+      hoveredBeaconKey = null;
+      if (eventsVisible) {
+        const beaconHits = [];
+        for (const { beacons } of loaded.values()) {
+          if (beacons) { beaconHits.push(...beacons.hitMeshes); }
+        }
+        if (beaconHits.length) {
+          hoverRay.setFromCamera(ndc, camera);
+          const bHit = hoverRay.intersectObjects(beaconHits, false);
+          hoveredBeaconKey = bHit.length ? bHit[0].object.userData.beaconKey : null;
+        }
+      }
       canvas.style.cursor = (hoveredEggId || hoveredBeaconKey) ? 'pointer' : '';
     });
 
