@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Resources\MeetupMapResource;
 use App\Models\Meetup;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 class MapEventsController extends Controller
 {
@@ -16,8 +15,6 @@ class MapEventsController extends Controller
      */
     public function __invoke(): AnonymousResourceCollection
     {
-        JsonResource::withoutWrapping();
-
         $events = Meetup::query()
             ->published()
             ->upcoming()
