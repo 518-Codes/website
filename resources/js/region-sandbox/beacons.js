@@ -34,17 +34,17 @@ const BEACON_FRAG = `
 
 /**
  * Build beacon meshes + sparkle emitters + HTML labels for one chunk's event groups.
- * Mirrors createChunkLabels: world Z accounts for the chunk's zOffset; heights use
+ * Mirrors createChunkLabels: world placement via the chunk world rect; heights use
  * the chunk heightmap so beacons sit on terrain.
  *
  * @param {HTMLElement} labelsEl the `.region-labels` overlay
  * @param {{width:number,height:number,data:number[]}} heightmap
  * @param {Array} groups output of groupByLocation, each with chunk-local x,z in [0,1]
- * @param {{chunkAspect:number, zOffset:number, thresholds:object, getNowMs:()=>number, reduceMotion:boolean}} opts
+ * @param {{ world:{x:number,z:number,w:number,d:number}, thresholds:object, getNowMs:()=>number, reduceMotion:boolean }} opts
  * @returns {{ group: THREE.Group, items: Array, update: Function, dispose: Function }}
  */
 export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
-  const { chunkAspect, zOffset, thresholds, getNowMs, reduceMotion } = opts;
+  const { world, thresholds, getNowMs, reduceMotion } = opts;
   const group = new THREE.Group();
   // Beacon + sparkle tint from a tunable hue + saturation at a fixed loot-glow lightness.
   const color = new THREE.Color().setHSL(thresholds.beaconHue / 360, thresholds.beaconSaturation, 0.75);
@@ -56,8 +56,8 @@ export function createChunkBeacons(labelsEl, heightmap, groups, opts) {
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
   const items = groups.map((g) => {
-    const x = g.x * 2 - 1;
-    const z = (g.z * 2 - 1) * chunkAspect + zOffset;
+    const x = world.x + (g.x - 0.5) * world.w;
+    const z = world.z + (g.z - 0.5) * world.d;
     const baseY = sampleHeight(heightmap, g.x, g.z) * RELIEF;
 
     // Beacon scaled per-frame by the size envelope; shape (cone/box) swapped per-frame.
