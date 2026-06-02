@@ -176,6 +176,28 @@
                         <button class="btn btn-primary" disabled style="width: 100%; justify-content: center;">
                             ✓ YOU'RE GOING
                         </button>
+                        @if ($showPasswordPrompt)
+                            <div style="border: 1px solid var(--hairline); padding: 12px; margin-top: 8px;">
+                                <div style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-mute); margin-bottom: 8px;">
+                                    save your profile?
+                                </div>
+                                <input
+                                    class="manifest-input"
+                                    type="password"
+                                    placeholder="choose a password"
+                                    wire:model="newPassword"
+                                >
+                                @error('newPassword') <div class="manifest-error">{{ $message }}</div> @enderror
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                    <button class="btn btn-primary" wire:click="createAccount" style="flex: 1; justify-content: center; font-size: 11px;">
+                                        CREATE ACCOUNT
+                                    </button>
+                                    <button class="btn btn-ghost" wire:click="skipAccountCreation" style="font-size: 11px;">
+                                        skip
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
                     @else
                         <div class="manifest-rsvp-form">
                             <div>
@@ -274,7 +296,13 @@
                             <div class="roster-row">
                                 <span class="roster-idx">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                                 <span><span class="roster-badge">{{ $initials }}</span></span>
-                                <span class="roster-name">{{ $rsvp->name }}</span>
+                                <span class="roster-name">
+                                    @if ($rsvp->user?->username)
+                                        <a href="/members/{{ $rsvp->user->username }}" style="color: var(--accent); text-decoration: none;">{{ $rsvp->name }}</a>
+                                    @else
+                                        {{ $rsvp->name }}
+                                    @endif
+                                </span>
                                 <span class="roster-time">{{ $rsvp->created_at->diffForHumans() }}</span>
                             </div>
                         @endforeach
