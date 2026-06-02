@@ -45,16 +45,6 @@
         .side-row:last-child { border: 0; }
         .side-row b { color: var(--accent); font-weight: 700; }
 
-        .subscribe-row { display: flex; }
-        .subscribe-input {
-            flex: 1; padding: 8px 12px; border: 2px solid var(--fg); border-right: 0;
-            background: var(--bg); color: var(--fg); font-family: var(--font-mono); font-size: 13px; outline: none;
-        }
-        .subscribe-btn {
-            padding: 8px 14px; border: 2px solid var(--fg); background: var(--accent);
-            color: var(--bg); font-weight: 700; cursor: pointer; font-family: var(--font-mono);
-        }
-
         .events-empty { padding: 80px 32px; border: 2px dashed var(--rule-2); text-align: center; color: var(--fg-mute); }
 
         @media (max-width: 900px) {
@@ -79,12 +69,8 @@
                     $totalEvents = $meetupsByMonth->flatten()->count();
                     $totalCities = $meetupsByMonth->flatten()->pluck('location')->unique()->count();
                 @endphp
-                <div style="color: var(--fg-mute); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">
+                <div style="color: var(--fg-mute); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">
                     {{ $totalEvents }} event{{ $totalEvents !== 1 ? 's' : '' }} · {{ $totalCities }} {{ $totalCities === 1 ? 'city' : 'cities' }}
-                </div>
-                <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                    <a href="#" class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;">+ ical</a>
-                    <a href="#" class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;">rss</a>
                 </div>
             </div>
         </div>
@@ -118,7 +104,7 @@
                 @empty
                     <div class="events-empty">
                         <div style="font-size: 16px; margin-bottom: 8px;">// no upcoming events <span style="display:inline-block; width:.55em; height:1em; background:var(--accent); vertical-align:-.15em;"></span></div>
-                        <div style="font-size: 13px;">Want to kick things off? <a href="#host">host one yourself →</a></div>
+                        <div style="font-size: 13px;">Want to kick things off? <a href="{{ route('host') }}">host one yourself →</a></div>
                     </div>
                 @endforelse
             </main>
@@ -137,18 +123,15 @@
                 </div>
 
                 <div class="side-card">
-                    <div class="side-card-title">// subscribe</div>
-                    <p style="font-size: 13px; color: var(--fg-dim); margin: 0 0 12px;">One short email on Mondays. The week ahead, that's it.</p>
-                    <div class="subscribe-row">
-                        <input class="subscribe-input" type="email" placeholder="you@domain">
-                        <button class="subscribe-btn">→</button>
-                    </div>
+                    <div class="side-card-title">// discord</div>
+                    <p style="font-size: 13px; color: var(--fg-dim); margin: 0 0 12px;">We post events and hang out in Discord. Come say hi.</p>
+                    <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px 14px; font-size: 12px;">JOIN THE DISCORD →</a>
                 </div>
 
                 <div class="side-card">
                     <div class="side-card-title">// host</div>
                     <p style="font-size: 13px; color: var(--fg-dim); margin: 0 0 12px;">Got a topic, a venue, or just a Tuesday? Submit a one-paragraph proposal.</p>
-                    <a href="#" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px 14px; font-size: 12px;">SUBMIT EVENT →</a>
+                    <a href="{{ route('host') }}" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px 14px; font-size: 12px;">SUBMIT EVENT →</a>
                 </div>
             </aside>
         </div>

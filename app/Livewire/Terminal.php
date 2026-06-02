@@ -167,7 +167,7 @@ class Terminal extends Component
             ['type' => 'output', 'text' => 'Meetups, demo nights, and study groups for people who'],
             ['type' => 'output', 'text' => 'write code in the 518. Show up. Say hi. Write code.'],
             ['type' => 'output', 'text' => ''],
-            ['type' => 'dim', 'text' => 'Albany · Troy · Schenectady · Saratoga Springs · Hudson Valley'],
+            ['type' => 'dim', 'text' => implode(' · ', config('cities'))],
         ];
 
         foreach ($lines as $line) {

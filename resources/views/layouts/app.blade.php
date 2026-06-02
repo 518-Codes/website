@@ -174,7 +174,7 @@
         /* Footer */
         .footer { border-top: 2px solid var(--fg); padding: 40px 32px 32px; }
         .footer-rule { color: var(--accent); overflow: hidden; white-space: nowrap; font-family: var(--font-mono); font-size: 13px; line-height: 1; user-select: none; margin-bottom: 32px; }
-        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; }
         .footer-desc { color: var(--fg-dim); font-size: 13px; margin-top: 12px; max-width: 32ch; line-height: 1.5; }
         .footer-col-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-mute); font-weight: 600; margin-bottom: 10px; }
         .footer-link { display: block; margin-bottom: 6px; color: var(--fg-dim); text-decoration: none; font-size: 14px; }
@@ -208,8 +208,8 @@
         <li><a href="/#about">about</a></li>
         <li><a href="{{ route('host') }}" @class(['active' => request()->is('host')])>host</a></li>
     </ul>
-    <a href="#" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
-        SUBSCRIBE →
+    <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
+        JOIN DISCORD →
     </a>
 </nav>
 
@@ -231,15 +231,10 @@
         </div>
         <div>
             <div class="footer-col-title">community</div>
-            @foreach(['events' => '/events', 'host an event' => route('host'), 'code of conduct' => '#', 'about' => '/#about'] as $label => $href)
+            @foreach(['events' => '/events', 'host an event' => route('host'), 'code of conduct' => route('code-of-conduct'), 'about' => '/#about'] as $label => $href)
                 <a href="{{ $href }}" class="footer-link">› {{ $label }}</a>
             @endforeach
-        </div>
-        <div>
-            <div class="footer-col-title">subscribe</div>
-            @foreach(['weekly digest' => '#', 'rss feed' => '#', 'ical link' => '#', 'discord' => 'https://discord.gg/U57hDJv5r'] as $label => $href)
-                <a href="{{ $href }}" class="footer-link">› {{ $label }}</a>
-            @endforeach
+            <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="footer-link">› discord</a>
         </div>
         <div>
             <div class="footer-col-title">region</div>

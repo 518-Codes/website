@@ -165,7 +165,7 @@
                         <div class="rule">Free to attend. Always.</div>
                         <div class="rule">No sales pitches or recruiting disguised as talks.</div>
                         <div class="rule">Any skill level welcome — senior to first-timer.</div>
-                        <div class="rule">Code of conduct applies.</div>
+                        <div class="rule"><a href="{{ route('code-of-conduct') }}">Code of conduct</a> applies.</div>
                     </div>
                 </div>
             </div>

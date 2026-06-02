@@ -174,7 +174,7 @@
                 @else
                     <div class="row"><span>next event</span><b>TBA</b></div>
                 @endif
-                <div class="row"><span>cities</span><b>12</b></div>
+                <div class="row"><span>cities</span><b>{{ count(config('cities')) }}</b></div>
                 <div class="row"><span>people coming</span><b>{{ $stats['rsvps_total'] }}</b></div>
                 <div class="row"><span>cost to show up</span><b>$0</b></div>
             </div>
@@ -235,7 +235,7 @@
             </div>
 
             <div class="schedule-card">
-                <div class="kicker kicker-mute">// how it runs</div>
+                <div class="kicker kicker-mute">// a typical night</div>
                 <ul>
                     <li><span class="time">6:30</span> &nbsp;doors open</li>
                     <li><span class="time">7:00</span> &nbsp;talks &amp; demos</li>
@@ -302,20 +302,22 @@
         <div class="about-grid">
             <div>
                 <p>
-                    518.codes is a community of developers, designers, students, and tinkerers who happen to
-                    live in the same chunk of upstate New York. We started with a Postgres meetup at a brewery
-                    and kept showing up because the conversations kept being good.
+                    518.codes was founded by three software engineers who met at Startup Tech Valley in May 2026.
+                    We hit it off immediately — trading business ideas, comparing go-to stacks, talking through where
+                    we each wanted to go in software — and kept landing on the same idea: the 518 should have a real
+                    community for the people who write code here. So we started one.
                 </p>
                 <p>
-                    We are not a conference. We don't have sponsors, swag, or a stage. We have a calendar and
-                    a small group of people who take turns picking a date and a room.
-                    Anyone can host. Everyone is welcome — junior, senior, between jobs, between languages.
+                    We are not a conference. We don't have sponsors, swag, or a stage. We're a group of people who
+                    like to hang out, write code, and support each other and the community around us.
+                    Anyone can host, and everyone is welcome — junior, senior, between jobs, between languages.
+                    Wherever you are in your career, you have a place at our table.
                 </p>
                 <p>
                     <span style="color: var(--accent);">›</span> Show up. Say hi. Bring a friend.
                 </p>
                 <div class="city-chips">
-                    @foreach(['Albany', 'Troy', 'Schenectady', 'Saratoga Springs', 'Clifton Park', 'Cohoes', 'Watervliet', 'Rensselaer', 'Delmar', 'Hudson', 'Glens Falls', 'Amsterdam'] as $city)
+                    @foreach(config('cities') as $city)
                         <span class="city-chip">{{ $city }}</span>
                     @endforeach
                 </div>
@@ -323,15 +325,15 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-n">{{ $stats['events_hosted'] }}</div>
-                    <div class="stat-l">events hosted</div>
+                    <div class="stat-l">events</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-n">{{ $stats['rsvps_total'] }}</div>
                     <div class="stat-l">total rsvps</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-n">12</div>
-                    <div class="stat-l">cities reached</div>
+                    <div class="stat-n">{{ count(config('cities')) }}</div>
+                    <div class="stat-l">cities</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-n">$0</div>

@@ -13,6 +13,8 @@ Route::get('/api/map-events', MapEventsController::class);
 
 Route::get('/map', fn () => view('region-map'))->name('map');
 
+Route::get('/code-of-conduct', fn () => view('code-of-conduct'))->name('code-of-conduct');
+
 Route::get('/events', EventsIndex::class)->name('events.index');
 Route::get('/events/{slug}', EventDetail::class)->name('events.show');
 Route::get('/events/{slug}/ics', IcsController::class)->name('events.ics');
