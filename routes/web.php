@@ -7,6 +7,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\EventDetail;
 use App\Livewire\EventsIndex;
 use App\Livewire\HostEvent;
+use App\Livewire\Members\EditProfile;
 use App\Livewire\Members\MemberProfile;
 use App\Livewire\Members\MembersIndex;
 use App\Models\Meetup;
@@ -26,6 +27,7 @@ Route::post('/logout', function () {
 
 Route::get('/members', MembersIndex::class)->name('members.index');
 Route::get('/members/{username}', MemberProfile::class)->name('members.show');
+Route::get('/members/{username}/edit', EditProfile::class)->name('members.edit')->middleware('auth');
 
 Route::get('/api/map-events', MapEventsController::class);
 
