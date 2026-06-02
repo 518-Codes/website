@@ -2,22 +2,17 @@
 
 namespace App\Models;
 
-use Database\Factories\RsvpFactory;
+use Database\Factories\ExperienceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['meetup_id', 'user_id', 'name', 'email'])]
-class Rsvp extends Model
+#[Fillable(['user_id', 'title', 'company', 'start_year', 'end_year', 'description'])]
+class Experience extends Model
 {
-    /** @use HasFactory<RsvpFactory> */
+    /** @use HasFactory<ExperienceFactory> */
     use HasFactory;
-
-    public function meetup(): BelongsTo
-    {
-        return $this->belongsTo(Meetup::class);
-    }
 
     public function user(): BelongsTo
     {
