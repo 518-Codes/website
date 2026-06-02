@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['meetup_id', 'name', 'email'])]
+#[Fillable(['meetup_id', 'user_id', 'name', 'email'])]
 class Rsvp extends Model
 {
     /** @use HasFactory<RsvpFactory> */
@@ -17,5 +17,10 @@ class Rsvp extends Model
     public function meetup(): BelongsTo
     {
         return $this->belongsTo(Meetup::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
