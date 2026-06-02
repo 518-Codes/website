@@ -205,12 +205,22 @@
     </a>
     <ul class="nav-links">
         <li><a href="/events" @class(['active' => request()->is('events*')])>events</a></li>
+        <li><a href="/members" @class(['active' => request()->is('members*')])>members</a></li>
         <li><a href="/#about">about</a></li>
         <li><a href="{{ route('host') }}" @class(['active' => request()->is('host')])>host</a></li>
     </ul>
-    <a href="#" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
-        SUBSCRIBE →
-    </a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        @auth
+            <a href="/members/{{ auth()->user()->username }}" class="nav-links" style="color: var(--fg-dim); text-decoration: none; font-size: 14px;">{{ auth()->user()->username }}</a>
+            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                @csrf
+                <button type="submit" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px;">LOGOUT</button>
+            </form>
+        @else
+            <a href="{{ route('login') }}" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">LOGIN</a>
+            <a href="{{ route('register') }}" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">REGISTER →</a>
+        @endauth
+    </div>
 </nav>
 
 {{ $slot ?? '' }}

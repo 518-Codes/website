@@ -2,12 +2,25 @@
 
 use App\Http\Controllers\IcsController;
 use App\Http\Controllers\MapEventsController;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
 use App\Livewire\EventDetail;
 use App\Livewire\EventsIndex;
 use App\Livewire\HostEvent;
 use App\Models\Meetup;
 use App\Models\Rsvp;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/register', Register::class)->name('register');
+Route::get('/login', Login::class)->name('login');
+Route::post('/logout', function () {
+    Auth::logout();
+    session()->invalidate();
+    session()->regenerateToken();
+
+    return redirect('/');
+})->name('logout')->middleware('auth');
 
 Route::get('/api/map-events', MapEventsController::class);
 
