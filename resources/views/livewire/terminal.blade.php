@@ -35,17 +35,21 @@
 
         <div class="term-input-row" wire:loading.class="term-loading">
             <span class="term-ps1">
-                @if ($rsvpState === 'rsvp-name')
+                @if (in_array($rsvpState, ['rsvp-name', 'register-name']))
                     name
-                @elseif ($rsvpState === 'rsvp-email')
+                @elseif (in_array($rsvpState, ['rsvp-email', 'login-email', 'register-email']))
                     email
+                @elseif (in_array($rsvpState, ['login-password', 'register-password']))
+                    pass
+                @elseif ($rsvpState === 'register-username')
+                    user
                 @else
                     $
                 @endif
             </span>
             <input
                 class="term-input-field"
-                type="{{ $rsvpState === 'rsvp-email' ? 'email' : 'text' }}"
+                type="{{ in_array($rsvpState, ['login-password', 'register-password']) ? 'password' : (in_array($rsvpState, ['rsvp-email', 'login-email', 'register-email']) ? 'email' : 'text') }}"
                 wire:model="input"
                 wire:keydown.enter="submit"
                 autocomplete="off"
@@ -93,6 +97,25 @@ function terminalShell() {
                 this.$nextTick(() => {
                     this.$refs.body.scrollTop = this.$refs.body.scrollHeight;
                 });
+            });
+
+            this.$watch('$wire.redirectTo', (url) => {
+                if (!url) return;
+                const chars = ['▓', '▒', '░', '▒', '▓', '█'];
+                let i = 0;
+                const bar = document.createElement('div');
+                bar.className = 'term-line term-accent';
+                bar.style.letterSpacing = '2px';
+                this.$refs.body.appendChild(bar);
+                this.$refs.body.scrollTop = this.$refs.body.scrollHeight;
+                const tick = setInterval(() => {
+                    bar.textContent = chars.slice(0, (i % chars.length) + 1).join('') + ' loading...';
+                    i++;
+                }, 180);
+                setTimeout(() => {
+                    clearInterval(tick);
+                    window.location.href = url;
+                }, 800);
             });
         }
     }

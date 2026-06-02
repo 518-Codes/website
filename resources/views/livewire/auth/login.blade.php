@@ -1,45 +1,7 @@
 <div>
-    <style>
-        .auth-page { max-width: 480px; margin: 80px auto; padding: 0 32px; }
-        .auth-box { border: 2px solid var(--fg); box-shadow: var(--shadow-2); }
-        .auth-head {
-            background: var(--fg); color: var(--bg); padding: 8px 14px;
-            font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
-        }
-        .auth-body { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
-        .auth-field { display: flex; flex-direction: column; gap: 4px; }
-        .auth-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-mute); }
-        .auth-input {
-            padding: 8px 12px; border: 2px solid var(--fg); background: var(--bg);
-            color: var(--fg); font-family: var(--font-mono); font-size: 13px; outline: none;
-        }
-        .auth-input:focus { border-color: var(--accent); }
-        .auth-error { font-size: 11px; color: var(--amber); margin-top: 2px; }
-        .auth-footer { font-size: 13px; color: var(--fg-dim); text-align: center; padding: 14px; border-top: 1px solid var(--hairline); }
-    </style>
-
-    <div class="auth-page">
-        <div class="auth-box">
-            <div class="auth-head">// login</div>
-            <div class="auth-body">
-                <div class="auth-field">
-                    <label class="auth-label">email</label>
-                    <input class="auth-input" type="email" wire:model="email" placeholder="you@example.com">
-                    @error('email') <div class="auth-error">{{ $message }}</div> @enderror
-                </div>
-                <div class="auth-field">
-                    <label class="auth-label">password</label>
-                    <input class="auth-input" type="password" wire:model="password">
-                    @error('password') <div class="auth-error">{{ $message }}</div> @enderror
-                </div>
-                <button class="btn btn-primary" wire:click="login" style="width: 100%; justify-content: center;">
-                    <span wire:loading.remove wire:target="login">LOGIN →</span>
-                    <span wire:loading wire:target="login">CHECKING...</span>
-                </button>
-            </div>
-            <div class="auth-footer">
-                no account? <a href="/register">register</a>
-            </div>
-        </div>
+    <div style="max-width: 1200px; margin: 48px auto 0; padding: 0 32px; text-align: center;">
+        <p style="font-size: 13px; color: var(--fg-mute);">
+            type <span style="color: var(--accent); font-weight: 700;">login</span> in the terminal below
+        </p>
     </div>
 </div>

@@ -182,6 +182,39 @@
         .footer-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hairline); color: var(--fg-mute); font-size: 12px; }
         .footer-status { color: var(--accent); }
 
+        /* Mobile nav */
+        .nav-hamburger {
+            display: none; flex-direction: column; gap: 5px;
+            background: none; border: none; cursor: pointer; padding: 4px;
+        }
+        .nav-hamburger span {
+            display: block; width: 22px; height: 2px; background: var(--fg);
+            transition: transform 200ms, opacity 200ms;
+        }
+        .nav-hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+        .nav-hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .nav-mobile {
+            background: var(--bg); border-bottom: 2px solid var(--fg);
+        }
+        .nav-mobile-inner {
+            display: flex; flex-direction: column; padding: 16px 20px; gap: 0;
+        }
+        .nav-mobile-inner a, .nav-mobile-inner button {
+            display: block; padding: 12px 0;
+            border-bottom: 1px solid var(--hairline);
+            color: var(--fg-dim); text-decoration: none; font-size: 15px;
+            background: none; border-top: none; border-left: none; border-right: none;
+            cursor: pointer; text-align: left; font-family: var(--font-mono);
+            letter-spacing: 0.02em;
+        }
+        .nav-mobile-inner a:last-child, .nav-mobile-inner button:last-child { border-bottom: none; }
+        .nav-mobile-inner a:hover, .nav-mobile-inner button:hover { color: var(--accent); background: transparent; }
+        .nav-mobile-inner a.active { color: var(--accent); }
+        .nav-mobile-ctas { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; }
+        .nav-mobile-ctas .btn { width: 100%; justify-content: center; }
+
         @media (max-width: 900px) {
             .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
             .nav { padding: 16px 20px; }
@@ -189,6 +222,8 @@
 
         @media (max-width: 640px) {
             .nav-links { display: none; }
+            .nav-hamburger { display: flex; }
+            .nav-desktop-actions { display: none; }
             .footer-grid { grid-template-columns: 1fr; }
         }
 
@@ -199,6 +234,7 @@
 </head>
 <body>
 
+<div x-data="{ open: false }">
 <nav class="nav">
     <a href="/" class="nav-brand">
         <span class="dollar">$</span>518<span class="dot">.</span>codes
@@ -210,21 +246,60 @@
         <li><a href="{{ route('host') }}" @class(['active' => request()->is('host')])>host</a></li>
     </ul>
     <div style="display: flex; align-items: center; gap: 12px;">
-        @auth
-            <a href="/members/{{ auth()->user()->username }}" class="nav-links" style="color: var(--fg-dim); text-decoration: none; font-size: 14px;">{{ auth()->user()->username }}</a>
-            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                @csrf
-                <button type="submit" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px;">LOGOUT</button>
-            </form>
-        @else
-            <a href="{{ route('login') }}" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">LOGIN</a>
-            <a href="{{ route('register') }}" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">REGISTER →</a>
-        @endauth
-        <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
-            JOIN DISCORD →
-        </a>
+        <div class="nav-desktop-actions" style="display: flex; align-items: center; gap: 12px;">
+            @auth
+                <a href="/members/{{ auth()->user()->username }}" class="nav-links" style="color: var(--fg-dim); text-decoration: none; font-size: 14px;">{{ auth()->user()->username }}</a>
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px;">LOGOUT</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-ghost" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">LOGIN</a>
+                <a href="{{ route('register') }}" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">REGISTER →</a>
+            @endauth
+            <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; letter-spacing: 0.12em;">
+                JOIN DISCORD →
+            </a>
+        </div>
+        <button
+            class="nav-hamburger"
+            @click="open = !open"
+            :aria-expanded="open.toString()"
+            aria-label="Toggle menu"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
 </nav>
+
+<div class="nav-mobile" x-show="open" x-transition style="display: none;">
+    <div class="nav-mobile-inner">
+        <a href="/events" @class(['active' => request()->is('events*')]) @click="open = false">events</a>
+        <a href="/members" @class(['active' => request()->is('members*')]) @click="open = false">members</a>
+        <a href="/#about" @click="open = false">about</a>
+        <a href="{{ route('host') }}" @class(['active' => request()->is('host')]) @click="open = false">host an event</a>
+        <div class="nav-mobile-ctas">
+            @auth
+                <a href="/members/{{ auth()->user()->username }}" class="btn btn-ghost" style="width: 100%; justify-content: center;" @click="open = false">
+                    {{ auth()->user()->username }}
+                </a>
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost" style="width: 100%; justify-content: center;">LOGOUT</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-ghost" @click="open = false">LOGIN</a>
+                <a href="{{ route('register') }}" class="btn btn-primary" @click="open = false">REGISTER →</a>
+            @endauth
+            <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" @click="open = false">
+                JOIN DISCORD →
+            </a>
+        </div>
+    </div>
+</div>
+</div>
 
 {{ $slot ?? '' }}
 @yield('content')

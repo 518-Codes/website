@@ -23,9 +23,19 @@
         .profile-sidebar-box { border: 2px solid var(--fg); margin-bottom: 16px; box-shadow: var(--shadow-2); }
         .sidebar-head { background: var(--fg); color: var(--bg); padding: 6px 12px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
         .sidebar-body { padding: 14px; }
-        .profile-avatar { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--fg); display: block; margin-bottom: 12px; }
-        .profile-avatar-placeholder { width: 100%; aspect-ratio: 1; border: 2px solid var(--fg); background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 800; color: var(--accent); margin-bottom: 12px; }
+        .profile-avatar-sm {
+            width: 52px; height: 52px; flex-shrink: 0;
+            border: 2px solid var(--fg); background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 800; color: var(--accent); overflow: hidden;
+        }
+        .profile-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-identity { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--hairline); }
+        .sidebar-identity-text { min-width: 0; }
+        .sidebar-identity-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-identity-handle { font-size: 11px; color: var(--accent); letter-spacing: 0.04em; }
         .social-link { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg-dim); text-decoration: none; margin-bottom: 8px; }
+        .social-link:last-child { margin-bottom: 0; }
         .social-link:hover { color: var(--accent); background: transparent; }
         .attended-item { font-size: 13px; color: var(--fg-dim); padding: 6px 0; border-bottom: 1px solid var(--hairline); }
         .attended-item:last-child { border-bottom: none; }
@@ -111,42 +121,46 @@
 
             <aside>
                 <div class="profile-sidebar-box">
-                    <div class="sidebar-head">// profile</div>
+                    @php $initials = strtoupper(substr($member->name, 0, 1)) . strtoupper(substr(strstr($member->name, ' '), 1, 1)); @endphp
+                    <div class="sidebar-identity">
+                        <div class="profile-avatar-sm">
+                            @if ($member->avatar_path)
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($member->avatar_path) }}" alt="{{ $member->name }}">
+                            @else
+                                {{ $initials }}
+                            @endif
+                        </div>
+                        <div class="sidebar-identity-text">
+                            <div class="sidebar-identity-name">{{ $member->name }}</div>
+                            <div class="sidebar-identity-handle">@<span>{{ $member->username }}</span></div>
+                        </div>
+                    </div>
                     <div class="sidebar-body">
-                        @if ($member->avatar_path)
-                            <img
-                                class="profile-avatar"
-                                src="{{ \Illuminate\Support\Facades\Storage::url($member->avatar_path) }}"
-                                alt="{{ $member->name }}"
-                            >
-                        @else
-                            @php $initials = strtoupper(substr($member->name, 0, 1)) . strtoupper(substr(strstr($member->name, ' '), 1, 1)); @endphp
-                            <div class="profile-avatar-placeholder">{{ $initials }}</div>
-                        @endif
-
                         @if ($member->company)
-                            <div style="font-size: 13px; color: var(--fg-dim); margin-bottom: 12px;">{{ $member->company }}</div>
+                            <div style="font-size: 12px; color: var(--fg-mute); letter-spacing: 0.04em; margin-bottom: 12px;">{{ $member->company }}</div>
                         @endif
 
-                        @if ($member->github_url)
-                            <a href="{{ $member->github_url }}" class="social-link" target="_blank" rel="noopener">
-                                <span style="color: var(--accent);">›</span> github
-                            </a>
-                        @endif
-                        @if ($member->twitter_url)
-                            <a href="{{ $member->twitter_url }}" class="social-link" target="_blank" rel="noopener">
-                                <span style="color: var(--accent);">›</span> twitter
-                            </a>
-                        @endif
-                        @if ($member->linkedin_url)
-                            <a href="{{ $member->linkedin_url }}" class="social-link" target="_blank" rel="noopener">
-                                <span style="color: var(--accent);">›</span> linkedin
-                            </a>
-                        @endif
-                        @if ($member->website_url)
-                            <a href="{{ $member->website_url }}" class="social-link" target="_blank" rel="noopener">
-                                <span style="color: var(--accent);">›</span> website
-                            </a>
+                        @if ($member->github_url || $member->twitter_url || $member->linkedin_url || $member->website_url)
+                            @if ($member->github_url)
+                                <a href="{{ $member->github_url }}" class="social-link" target="_blank" rel="noopener">
+                                    <span style="color: var(--accent);">›</span> github
+                                </a>
+                            @endif
+                            @if ($member->twitter_url)
+                                <a href="{{ $member->twitter_url }}" class="social-link" target="_blank" rel="noopener">
+                                    <span style="color: var(--accent);">›</span> twitter
+                                </a>
+                            @endif
+                            @if ($member->linkedin_url)
+                                <a href="{{ $member->linkedin_url }}" class="social-link" target="_blank" rel="noopener">
+                                    <span style="color: var(--accent);">›</span> linkedin
+                                </a>
+                            @endif
+                            @if ($member->website_url)
+                                <a href="{{ $member->website_url }}" class="social-link" target="_blank" rel="noopener">
+                                    <span style="color: var(--accent);">›</span> website
+                                </a>
+                            @endif
                         @endif
                     </div>
                 </div>

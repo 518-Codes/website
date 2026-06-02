@@ -53,7 +53,7 @@
                             @endif
                         </div>
                         <div class="member-name">{{ $member->name }}</div>
-                        <div class="member-handle">@{{ $member->username }}</div>
+                        <div class="member-handle">@<span>{{ $member->username }}</span></div>
                         @if ($member->headline)
                             <div class="member-headline">{{ $member->headline }}</div>
                         @endif
