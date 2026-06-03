@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\MeetupStatus;
+use App\Events\HostEventSubmitted;
 use App\Models\Meetup;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
@@ -40,6 +41,8 @@ class HostEvent extends Component
             'status' => MeetupStatus::Draft,
             'contact_email' => $this->contact_email,
         ]);
+
+        HostEventSubmitted::dispatch($this->title, $this->contact_email);
 
         $this->submitted = true;
     }
