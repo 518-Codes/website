@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\MeetupStatus;
+use App\Observers\MeetupObserver;
 use Database\Factories\MeetupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable(['title', 'slug', 'description', 'what_to_expect', 'location', 'latitude', 'longitude', 'starts_at', 'ends_at', 'status', 'contact_email'])]
+#[ObservedBy(MeetupObserver::class)]
 class Meetup extends Model
 {
     /** @use HasFactory<MeetupFactory> */
