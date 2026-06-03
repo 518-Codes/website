@@ -17,7 +17,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'username', 'headline', 'bio', 'company', 'avatar_path', 'website_url', 'github_url', 'twitter_url', 'linkedin_url', 'notification_preferences'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'notification_preferences'])]
 #[ObservedBy(UserObserver::class)]
 class User extends Authenticatable implements FilamentUser
 {
