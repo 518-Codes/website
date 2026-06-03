@@ -8,5 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('notifications:send-reminders --timing=24h')->everyFifteenMinutes();
-Schedule::command('notifications:send-reminders --timing=1h')->everyFifteenMinutes();
+Schedule::command('notifications:send-reminders --timing=24h')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('notifications:send-reminders --timing=1h')->everyFifteenMinutes()->withoutOverlapping();
