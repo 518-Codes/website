@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DiscordWebhook
 {
@@ -14,6 +15,10 @@ class DiscordWebhook
             return;
         }
 
-        Http::post($url, ['content' => $message]);
+        try {
+            Http::post($url, ['content' => $message]);
+        } catch (\Throwable $e) {
+            Log::warning('Discord webhook failed: '.$e->getMessage());
+        }
     }
 }
