@@ -17,6 +17,10 @@ class NotificationPreferencesCast implements CastsAttributes
             return new NotificationPreferences;
         }
 
+        if (! json_validate($value)) {
+            return new NotificationPreferences;
+        }
+
         $data = json_decode($value, true);
 
         return new NotificationPreferences(
@@ -38,6 +42,8 @@ class NotificationPreferencesCast implements CastsAttributes
             ]);
         }
 
-        return $value;
+        throw new \InvalidArgumentException(
+            'Value must be an instance of '.NotificationPreferences::class
+        );
     }
 }
