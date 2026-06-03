@@ -264,6 +264,47 @@
                     @error('websiteUrl') <div class="edit-error">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- Notification Preferences --}}
+                <div class="edit-section-title">notification preferences</div>
+
+                <div class="edit-field">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" wire:model="prefRsvpConfirmation">
+                        <span class="edit-label" style="text-transform:none; letter-spacing:0;">RSVP confirmations</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--fg-mute); margin-top:2px;">Receive a confirmation email when you RSVP for an event.</div>
+                </div>
+
+                <div class="edit-field">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" wire:model="prefAnnouncements">
+                        <span class="edit-label" style="text-transform:none; letter-spacing:0;">Event announcements</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--fg-mute); margin-top:2px;">Get notified when a new meetup is published.</div>
+                </div>
+
+                <div class="edit-field">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" wire:model.live="prefRemindersEnabled">
+                        <span class="edit-label" style="text-transform:none; letter-spacing:0;">Reminders</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--fg-mute); margin-top:2px;">Remind me before a meetup I've RSVP'd for.</div>
+
+                    @if($prefRemindersEnabled)
+                        <div style="display:flex; gap:16px; margin-top:8px; padding-left:4px;">
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:var(--fg-dim);">
+                                <input type="checkbox" wire:model="prefReminderTiming" value="24h">
+                                24 hours before
+                            </label>
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:var(--fg-dim);">
+                                <input type="checkbox" wire:model="prefReminderTiming" value="1h">
+                                1 hour before
+                            </label>
+                        </div>
+                        @error('prefReminderTiming') <div class="edit-error">{{ $message }}</div> @enderror
+                    @endif
+                </div>
+
                 <button class="btn btn-primary" wire:click="save" style="width: 100%; justify-content: center;">
                     <span wire:loading.remove wire:target="save">SAVE PROFILE →</span>
                     <span wire:loading wire:target="save">SAVING...</span>

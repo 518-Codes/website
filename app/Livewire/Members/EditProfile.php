@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Members;
 
+use App\DTOs\NotificationPreferences;
 use App\Models\Experience;
 use App\Models\Project;
 use App\Models\Skill;
@@ -49,6 +50,15 @@ class EditProfile extends Component
     #[Validate('nullable|image|max:2048')]
     public $avatar;
 
+    public bool $prefRsvpConfirmation = true;
+
+    public bool $prefAnnouncements = true;
+
+    public bool $prefRemindersEnabled = true;
+
+    /** @var array<string> */
+    public array $prefReminderTiming = ['24h', '1h'];
+
     /**
      * @var array<int, array{id: int|null, title: string, company: string, start_year: string, end_year: string, description: string}>
      */
@@ -74,6 +84,13 @@ class EditProfile extends Component
         $this->githubUrl = $this->member->github_url ?? '';
         $this->twitterUrl = $this->member->twitter_url ?? '';
         $this->linkedinUrl = $this->member->linkedin_url ?? '';
+
+        $prefs = $this->member->notification_preferences;
+        $this->prefRsvpConfirmation = $prefs->rsvpConfirmation;
+        $this->prefAnnouncements = $prefs->announcements;
+        $this->prefRemindersEnabled = $prefs->remindersEnabled;
+        $this->prefReminderTiming = $prefs->reminderTiming;
+
         $this->selectedSkillIds = $this->member->skills->pluck('id')->toArray();
         $this->skillOptions = Skill::orderBy('name')->get()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values()->toArray();
 
@@ -156,6 +173,10 @@ class EditProfile extends Component
 
     public function save(): void
     {
+        $this->validate([
+            'prefReminderTiming' => $this->prefRemindersEnabled ? 'required|array|min:1' : 'array',
+        ]);
+
         $this->validate();
 
         $this->validate([
@@ -183,6 +204,15 @@ class EditProfile extends Component
             'github_url' => $this->githubUrl ?: null,
             'twitter_url' => $this->twitterUrl ?: null,
             'linkedin_url' => $this->linkedinUrl ?: null,
+        ]);
+
+        $this->member->update([
+            'notification_preferences' => new NotificationPreferences(
+                rsvpConfirmation: $this->prefRsvpConfirmation,
+                announcements: $this->prefAnnouncements,
+                remindersEnabled: $this->prefRemindersEnabled,
+                reminderTiming: $this->prefReminderTiming,
+            ),
         ]);
 
         $this->member->skills()->sync($this->selectedSkillIds);
