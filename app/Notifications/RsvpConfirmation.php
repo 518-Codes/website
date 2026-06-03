@@ -12,6 +12,8 @@ class RsvpConfirmation extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(public readonly Rsvp $rsvp) {}
 
     /** @return array<string> */

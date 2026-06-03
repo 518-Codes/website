@@ -13,7 +13,7 @@ class RsvpObserver
 
     public function created(Rsvp $rsvp): void
     {
-        $rsvp->load('meetup');
+        $rsvp->load('meetup', 'user');
 
         if ($rsvp->user) {
             $prefs = $rsvp->user->notification_preferences;

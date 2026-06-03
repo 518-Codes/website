@@ -1,5 +1,6 @@
 <?php
 
+use App\DTOs\NotificationPreferences;
 use App\Enums\MeetupStatus;
 use App\Livewire\EventDetail;
 use App\Models\Meetup;
@@ -59,5 +60,24 @@ test('RsvpObserver sends Discord alert on RSVP created', function () {
         ->set('email', 'ada@example.com')
         ->call('rsvp');
 
-    Http::assertSent(fn ($request) => str_contains($request->body(), 'Ada Tang'));
+    Http::assertSent(fn ($request) => str_contains($request->body(), 'Ada Tang') &&
+        str_contains($request->body(), 'Test Meetup')
+    );
+});
+
+test('RsvpObserver does not send notification when user has opted out of RSVP confirmations', function () {
+    $user = User::factory()->create([
+        'notification_preferences' => new NotificationPreferences(rsvpConfirmation: false),
+    ]);
+    $meetup = Meetup::factory()->create([
+        'status' => MeetupStatus::Published,
+        'starts_at' => now()->addDays(7),
+    ]);
+
+    Livewire::test(EventDetail::class, ['slug' => $meetup->slug])
+        ->set('name', $user->name)
+        ->set('email', $user->email)
+        ->call('rsvp');
+
+    Notification::assertNothingSentTo($user);
 });
