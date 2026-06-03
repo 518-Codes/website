@@ -15,7 +15,7 @@ test('MeetupObserver sends MeetupAnnouncement when status transitions to Publish
 
     $meetup->update(['status' => MeetupStatus::Published]);
 
-    Notification::assertSentTo($users, MeetupAnnouncement::class);
+    Notification::assertSentTo($users, MeetupAnnouncement::class, fn ($n) => $n->meetup->is($meetup));
 });
 
 test('MeetupObserver does not send announcement on non-status save', function () {

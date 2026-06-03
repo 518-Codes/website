@@ -25,7 +25,7 @@ class MeetupObserver
 
         User::query()
             ->get()
-            ->filter(fn ($user) => $user->notification_preferences->announcements)
-            ->each(fn ($user) => $user->notify(new MeetupAnnouncement($meetup)));
+            ->filter(fn (User $user) => $user->notification_preferences->announcements)
+            ->each(fn (User $user) => $user->notify(new MeetupAnnouncement($meetup)));
     }
 }
