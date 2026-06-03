@@ -52,7 +52,8 @@ class Terminal extends Component
             return;
         }
 
-        $this->history[] = ['type' => 'input', 'text' => '$ '.$raw];
+        $isPassword = in_array($this->rsvpState, ['login-password', 'register-password']);
+        $this->history[] = ['type' => 'input', 'text' => '$ '.($isPassword ? str_repeat('•', strlen($raw)) : $raw)];
 
         if ($this->rsvpState === 'rsvp-name') {
             if ($raw === '') {

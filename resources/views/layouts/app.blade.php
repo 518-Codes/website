@@ -72,6 +72,7 @@
         .nav-brand .dollar { color: var(--accent); margin-right: 4px; }
         .nav-brand .dot { color: var(--accent); }
         .nav-links { display: flex; gap: 28px; list-style: none; padding: 0; margin: 0; font-size: 14px; }
+        .nav-desktop-actions { display: flex; align-items: center; gap: 12px; }
         .nav-links a { color: var(--fg-dim); text-decoration: none; border-bottom: 2px solid transparent; padding-bottom: 2px; }
         .nav-links a:hover { color: var(--accent); background: transparent; border-bottom-color: var(--accent); }
         .nav-links a.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -85,8 +86,8 @@
             transition: transform 150ms cubic-bezier(.2,.9,.25,1), box-shadow 150ms cubic-bezier(.2,.9,.25,1), background 150ms cubic-bezier(.2,.9,.25,1), color 150ms cubic-bezier(.2,.9,.25,1);
             letter-spacing: 0.02em;
         }
-        .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--bg); box-shadow: 6px 6px 0 0 var(--fg); }
-        .btn-primary:hover { transform: translate(6px,6px); box-shadow: none; background: var(--accent); color: var(--bg); }
+        .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow: 6px 6px 0 0 var(--fg); }
+        .btn-primary:hover { transform: translate(6px,6px); box-shadow: none; background: var(--accent); color: var(--bg); border-color: var(--accent); }
         .btn-secondary { background: transparent; color: var(--fg); box-shadow: 6px 6px 0 0 var(--fg); }
         .btn-secondary:hover { transform: translate(6px,6px); box-shadow: none; background: var(--accent); color: var(--bg); border-color: var(--bg); }
         .btn-ghost { background: transparent; color: var(--fg); border-color: transparent; box-shadow: none; padding: 12px 6px; }
@@ -166,7 +167,7 @@
         @keyframes blink { 50% { opacity: 0; } }
 
         @media (max-width: 640px) {
-            .term-body { min-height: 120px; max-height: 280px; padding: 14px 16px 0; }
+            .term-body { min-height: 240px; max-height: 420px; padding: 14px 16px 0; }
             .term-input-row { padding: 12px 0 16px; }
             .term-line { white-space: pre-wrap; }
         }
@@ -189,41 +190,64 @@
         }
         .nav-hamburger span {
             display: block; width: 22px; height: 2px; background: var(--fg);
-            transition: transform 200ms, opacity 200ms;
         }
-        .nav-hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-        .nav-hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-        .nav-hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        .nav-mobile {
-            background: var(--bg); border-bottom: 2px solid var(--fg);
+        .nav-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: var(--bg); flex-direction: column;
+            opacity: 0; transition: opacity 200ms ease;
         }
-        .nav-mobile-inner {
-            display: flex; flex-direction: column; padding: 16px 20px; gap: 0;
+        .nav-overlay.is-open { display: flex; }
+        .nav-overlay.is-visible { opacity: 1; }
+
+        .nav-overlay-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 32px; border-bottom: 2px solid var(--fg); flex-shrink: 0;
         }
-        .nav-mobile-inner a, .nav-mobile-inner button {
-            display: block; padding: 12px 0;
+        .nav-overlay-close {
+            background: none; border: none; cursor: pointer; padding: 4px;
+            color: var(--fg); font-family: var(--font-mono); font-size: 22px;
+            line-height: 1; display: flex; align-items: center; justify-content: center;
+        }
+        .nav-overlay-close:hover { color: var(--accent); }
+
+        .nav-overlay-links {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: 32px;
+        }
+        .nav-overlay-links a {
+            display: block; padding: 14px 0; color: var(--fg-dim);
+            text-decoration: none; font-size: 22px; letter-spacing: 0.02em;
             border-bottom: 1px solid var(--hairline);
-            color: var(--fg-dim); text-decoration: none; font-size: 15px;
-            background: none; border-top: none; border-left: none; border-right: none;
-            cursor: pointer; text-align: left; font-family: var(--font-mono);
-            letter-spacing: 0.02em;
         }
-        .nav-mobile-inner a:last-child, .nav-mobile-inner button:last-child { border-bottom: none; }
-        .nav-mobile-inner a:hover, .nav-mobile-inner button:hover { color: var(--accent); background: transparent; }
-        .nav-mobile-inner a.active { color: var(--accent); }
-        .nav-mobile-ctas { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; }
-        .nav-mobile-ctas .btn { width: 100%; justify-content: center; }
+        .nav-overlay-links a:first-child { border-top: 1px solid var(--hairline); }
+        .nav-overlay-links a .prefix { color: var(--accent); margin-right: 10px; }
+        .nav-overlay-links a:hover { color: var(--accent); background: transparent; }
+        .nav-overlay-links a.active { color: var(--accent); }
+
+        .nav-overlay-auth {
+            padding: 24px 32px 40px; border-top: 1px solid var(--hairline);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .nav-overlay-auth a {
+            display: block; padding: 10px 0; color: var(--fg-dim);
+            text-decoration: none; font-size: 15px; letter-spacing: 0.02em;
+        }
+        .nav-overlay-auth a .prefix { color: var(--accent); margin-right: 10px; }
+        .nav-overlay-auth a:hover { color: var(--accent); background: transparent; }
 
         @media (max-width: 900px) {
             .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
             .nav { padding: 16px 20px; }
-        }
-
-        @media (max-width: 640px) {
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
             .nav-desktop-actions { display: none; }
+            .nav-overlay-header { padding: 16px 20px; }
+            .nav-overlay-links { padding: 24px 20px; }
+            .nav-overlay-auth { padding: 20px 20px 40px; }
+        }
+
+        @media (max-width: 640px) {
             .footer-grid { grid-template-columns: 1fr; }
         }
 
@@ -234,7 +258,6 @@
 </head>
 <body>
 
-<div x-data="{ open: false }">
 <nav class="nav">
     <a href="/" class="nav-brand">
         <span class="dollar">$</span>518<span class="dot">.</span>codes
@@ -246,7 +269,7 @@
         <li><a href="{{ route('host') }}" @class(['active' => request()->is('host')])>host</a></li>
     </ul>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="nav-desktop-actions" style="display: flex; align-items: center; gap: 12px;">
+        <div class="nav-desktop-actions">
             @auth
                 <a href="/members/{{ auth()->user()->username }}" class="nav-links" style="color: var(--fg-dim); text-decoration: none; font-size: 14px;">{{ auth()->user()->username }}</a>
                 <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
@@ -263,9 +286,10 @@
         </div>
         <button
             class="nav-hamburger"
-            @click="open = !open"
-            :aria-expanded="open.toString()"
-            aria-label="Toggle menu"
+            id="nav-hamburger"
+            aria-expanded="false"
+            aria-label="Open menu"
+            onclick="navOpen()"
         >
             <span></span>
             <span></span>
@@ -274,32 +298,73 @@
     </div>
 </nav>
 
-<div class="nav-mobile" x-show="open" x-transition style="display: none;">
-    <div class="nav-mobile-inner">
-        <a href="/events" @class(['active' => request()->is('events*')]) @click="open = false">events</a>
-        <a href="/members" @class(['active' => request()->is('members*')]) @click="open = false">members</a>
-        <a href="/#about" @click="open = false">about</a>
-        <a href="{{ route('host') }}" @class(['active' => request()->is('host')]) @click="open = false">host an event</a>
-        <div class="nav-mobile-ctas">
-            @auth
-                <a href="/members/{{ auth()->user()->username }}" class="btn btn-ghost" style="width: 100%; justify-content: center;" @click="open = false">
-                    {{ auth()->user()->username }}
-                </a>
-                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                    @csrf
-                    <button type="submit" class="btn btn-ghost" style="width: 100%; justify-content: center;">LOGOUT</button>
-                </form>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-ghost" @click="open = false">LOGIN</a>
-                <a href="{{ route('register') }}" class="btn btn-primary" @click="open = false">REGISTER →</a>
-            @endauth
-            <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" class="btn btn-primary" @click="open = false">
-                JOIN DISCORD →
+<div class="nav-overlay" id="nav-overlay" role="dialog" aria-modal="true" aria-label="Navigation menu">
+    <div class="nav-overlay-header">
+        <a href="/" class="nav-brand">
+            <span class="dollar">$</span>518<span class="dot">.</span>codes
+        </a>
+        <button class="nav-overlay-close" onclick="navClose()" aria-label="Close menu">✕</button>
+    </div>
+    <div class="nav-overlay-links">
+        <a href="/events" @class(['active' => request()->is('events*')]) onclick="navClose()">
+            <span class="prefix">›</span>events
+        </a>
+        <a href="/members" @class(['active' => request()->is('members*')]) onclick="navClose()">
+            <span class="prefix">›</span>members
+        </a>
+        <a href="/#about" onclick="navClose()">
+            <span class="prefix">›</span>about
+        </a>
+        <a href="{{ route('host') }}" @class(['active' => request()->is('host')]) onclick="navClose()">
+            <span class="prefix">›</span>host an event
+        </a>
+    </div>
+    <div class="nav-overlay-auth">
+        @auth
+            <a href="/members/{{ auth()->user()->username }}" onclick="navClose()">
+                <span class="prefix">›</span>{{ auth()->user()->username }}
             </a>
-        </div>
+            <a href="{{ route('logout') }}"
+               onclick="event.preventDefault(); navClose(); document.getElementById('nav-logout-form').submit();">
+                <span class="prefix">›</span>logout
+            </a>
+            <form id="nav-logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">@csrf</form>
+        @else
+            <a href="{{ route('login') }}" onclick="navClose()">
+                <span class="prefix">›</span>login
+            </a>
+            <a href="{{ route('register') }}" onclick="navClose()">
+                <span class="prefix">›</span>register
+            </a>
+        @endauth
+        <a href="{{ config('community.discord_url') }}" target="_blank" rel="noopener" onclick="navClose()">
+            <span class="prefix">›</span>join discord
+        </a>
     </div>
 </div>
-</div>
+
+<script>
+    var navOverlay = document.getElementById('nav-overlay');
+    var navHamburger = document.getElementById('nav-hamburger');
+
+    function navOpen() {
+        navOverlay.classList.add('is-open');
+        requestAnimationFrame(function() { navOverlay.classList.add('is-visible'); });
+        navHamburger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function navClose() {
+        navOverlay.classList.remove('is-visible');
+        navHamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        setTimeout(function() { navOverlay.classList.remove('is-open'); }, 200);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && navOverlay.classList.contains('is-open')) { navClose(); }
+    });
+</script>
 
 {{ $slot ?? '' }}
 @yield('content')
