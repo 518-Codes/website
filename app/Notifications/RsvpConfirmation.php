@@ -24,13 +24,32 @@ class RsvpConfirmation extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject("You're registered for {$this->rsvp->meetup->title}!")
+        $meetup = $this->rsvp->meetup;
+        $timeRange = $meetup->ends_at
+            ? $meetup->starts_at->format('l, F j, Y \a\t g:ia').' – '.$meetup->ends_at->format('g:ia')
+            : $meetup->starts_at->format('l, F j, Y \a\t g:ia');
+
+        $mapsUrl = $meetup->latitude && $meetup->longitude
+            ? "https://www.google.com/maps?q={$meetup->latitude},{$meetup->longitude}"
+            : null;
+
+        $message = (new MailMessage)
+            ->subject("You're registered for {$meetup->title}!")
             ->greeting("Hey {$this->rsvp->name}!")
-            ->line("You're confirmed for **{$this->rsvp->meetup->title}**.")
-            ->line('📅 '.$this->rsvp->meetup->starts_at->format('l, F j, Y \a\t g:ia'))
-            ->line('📍 '.$this->rsvp->meetup->location)
-            ->action('View Event', route('events.show', $this->rsvp->meetup->slug))
+            ->line("You're confirmed for **{$meetup->title}**.")
+            ->line("**When:** {$timeRange}")
+            ->line("**Where:** {$meetup->location}");
+
+        if ($mapsUrl) {
+            $message->line("[Get directions]({$mapsUrl})");
+        }
+
+        if ($meetup->what_to_expect) {
+            $message->line("**What to expect:** {$meetup->what_to_expect}");
+        }
+
+        return $message
+            ->action('View Event', route('events.show', $meetup->slug))
             ->line('See you there!');
     }
 }

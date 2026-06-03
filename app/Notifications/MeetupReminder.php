@@ -29,12 +29,25 @@ class MeetupReminder extends Notification implements ShouldQueue
     {
         $when = $this->timing === '24h' ? 'tomorrow' : 'in one hour';
 
-        return (new MailMessage)
+        $timeRange = $this->meetup->ends_at
+            ? $this->meetup->starts_at->format('l, F j, Y \a\t g:ia').' – '.$this->meetup->ends_at->format('g:ia')
+            : $this->meetup->starts_at->format('l, F j, Y \a\t g:ia');
+
+        $mapsUrl = $this->meetup->latitude && $this->meetup->longitude
+            ? "https://www.google.com/maps?q={$this->meetup->latitude},{$this->meetup->longitude}"
+            : null;
+
+        $message = (new MailMessage)
             ->subject("Reminder: {$this->meetup->title} is {$when}")
-            ->greeting("Don't forget!")
-            ->line("**{$this->meetup->title}** is happening {$when}.")
-            ->line('Date: '.$this->meetup->starts_at->format('l, F j, Y \a\t g:ia'))
-            ->line('Location: '.$this->meetup->location)
-            ->action('View Event', route('events.show', $this->meetup->slug));
+            ->greeting("Don't forget — you've got a meetup {$when}!")
+            ->line("**{$this->meetup->title}**")
+            ->line("**When:** {$timeRange}")
+            ->line("**Where:** {$this->meetup->location}");
+
+        if ($mapsUrl) {
+            $message->line("[Get directions]({$mapsUrl})");
+        }
+
+        return $message->action('View Event', route('events.show', $this->meetup->slug));
     }
 }
