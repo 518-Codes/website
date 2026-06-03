@@ -11,8 +11,20 @@ class SendHostEventDiscordAlert
 
     public function handle(HostEventSubmitted $event): void
     {
-        $this->discord->send(
-            "📋 New host submission from {$event->name} ({$event->email})"
-        );
+        $meetup = $event->meetup;
+        $adminUrl = route('filament.admin.resources.meetups.edit', ['record' => $meetup->id]);
+
+        $this->discord->sendEmbed('📋 New host event submission', [
+            'title' => $meetup->title,
+            'url' => $adminUrl,
+            'color' => 0xFFB627,
+            'fields' => [
+                ['name' => 'Contact', 'value' => $meetup->contact_email ?? '—', 'inline' => true],
+                ['name' => 'Proposed Date', 'value' => $meetup->starts_at->format('M j, Y'), 'inline' => true],
+                ['name' => 'Location', 'value' => $meetup->location, 'inline' => false],
+                ['name' => 'Description', 'value' => str($meetup->description)->limit(300), 'inline' => false],
+            ],
+            'footer' => ['text' => 'Review and publish in the admin panel'],
+        ]);
     }
 }

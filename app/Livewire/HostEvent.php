@@ -32,7 +32,7 @@ class HostEvent extends Component
     {
         $this->validate();
 
-        Meetup::create([
+        $meetup = Meetup::create([
             'title' => $this->title,
             'slug' => Str::slug($this->title).'-'.Str::random(5),
             'description' => $this->description,
@@ -42,7 +42,7 @@ class HostEvent extends Component
             'contact_email' => $this->contact_email,
         ]);
 
-        HostEventSubmitted::dispatch($this->title, $this->contact_email);
+        HostEventSubmitted::dispatch($meetup);
 
         $this->submitted = true;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Meetup;
 use Illuminate\Foundation\Events\Dispatchable;
 
 class HostEventSubmitted
@@ -9,7 +10,6 @@ class HostEventSubmitted
     use Dispatchable;
 
     public function __construct(
-        public readonly string $name,
-        public readonly string $email,
+        public readonly Meetup $meetup,
     ) {}
 }
