@@ -3,8 +3,9 @@
 namespace App\Observers;
 
 use App\Enums\MeetupStatus;
-use App\Jobs\SendMeetupAnnouncements;
 use App\Models\Meetup;
+use App\Models\User;
+use App\Notifications\MeetupAnnouncement;
 
 class MeetupObserver
 {
@@ -22,6 +23,9 @@ class MeetupObserver
             return;
         }
 
-        SendMeetupAnnouncements::dispatch($meetup);
+        User::query()
+            ->get()
+            ->filter(fn ($user) => $user->notification_preferences->announcements)
+            ->each(fn ($user) => $user->notify(new MeetupAnnouncement($meetup)));
     }
 }
