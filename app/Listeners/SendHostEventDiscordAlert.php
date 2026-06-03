@@ -4,7 +4,9 @@ namespace App\Listeners;
 
 use App\Events\HostEventSubmitted;
 use App\Services\DiscordWebhook;
+use Illuminate\Events\Attributes\HandleEvent;
 
+#[HandleEvent(HostEventSubmitted::class)]
 class SendHostEventDiscordAlert
 {
     public function __construct(private readonly DiscordWebhook $discord) {}
