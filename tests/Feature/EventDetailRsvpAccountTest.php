@@ -7,6 +7,23 @@ use App\Models\Rsvp;
 use App\Models\User;
 use Livewire\Livewire;
 
+test('authenticated user can rsvp without entering name or email', function () {
+    $user = User::factory()->create(['name' => 'Ada Tang', 'email' => 'ada@example.com']);
+    $meetup = Meetup::factory()->create(['status' => MeetupStatus::Published, 'starts_at' => now()->addDays(7)]);
+
+    Livewire::actingAs($user)
+        ->test(EventDetail::class, ['slug' => $meetup->slug])
+        ->assertSet('name', 'Ada Tang')
+        ->assertSet('email', 'ada@example.com')
+        ->call('rsvp')
+        ->assertSet('rsvpd', true)
+        ->assertSet('showPasswordPrompt', false);
+
+    $rsvp = Rsvp::where('meetup_id', $meetup->id)->where('email', 'ada@example.com')->first();
+    expect($rsvp)->not->toBeNull();
+    expect($rsvp->user_id)->toBe($user->id);
+});
+
 test('rsvp links to existing user account by email', function () {
     $user = User::factory()->create(['email' => 'ada@example.com', 'username' => 'ada']);
     $meetup = Meetup::factory()->create(['status' => MeetupStatus::Published, 'starts_at' => now()->addDays(7)]);

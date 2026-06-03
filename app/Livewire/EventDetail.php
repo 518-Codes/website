@@ -36,18 +36,28 @@ class EventDetail extends Component
             ->where('slug', $slug)
             ->where('status', MeetupStatus::Published)
             ->firstOrFail();
+
+        if (Auth::check()) {
+            $this->name = Auth::user()->name;
+            $this->email = Auth::user()->email;
+        }
     }
 
     public function rsvp(): void
     {
-        $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255']);
+        if (! Auth::check()) {
+            $this->validate(['name' => 'required|string|max:255', 'email' => 'required|email|max:255']);
+        }
 
-        $existingUser = User::where('email', $this->email)->first();
+        $existingUser = Auth::check() ? Auth::user() : User::where('email', $this->email)->first();
+
+        $name = Auth::check() ? Auth::user()->name : $this->name;
+        $email = Auth::check() ? Auth::user()->email : $this->email;
 
         try {
             $this->meetup->rsvps()->create([
-                'name' => $this->name,
-                'email' => $this->email,
+                'name' => $name,
+                'email' => $email,
                 'user_id' => $existingUser?->id,
             ]);
         } catch (UniqueConstraintViolationException) {

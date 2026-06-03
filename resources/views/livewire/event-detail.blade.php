@@ -145,10 +145,9 @@
                     @foreach ($meetup->tags as $tag)
                         <span class="chip chip-accent">{{ $tag->name }}</span>
                     @endforeach
-                    <span class="chip">first-timer friendly</span>
                 </div>
                 <h1>{{ $meetup->title }}</h1>
-                <p class="detail-lede">{{ Str::limit($meetup->description, 280) }}</p>
+                <div class="detail-lede prose">{!! $meetup->description !!}</div>
             </div>
 
             {{-- Manifest panel --}}
@@ -200,6 +199,7 @@
                         @endif
                     @else
                         <div class="manifest-rsvp-form">
+                            @guest
                             <div>
                                 <input
                                     class="manifest-input"
@@ -218,6 +218,7 @@
                                 >
                                 @error('email') <div class="manifest-error">{{ $message }}</div> @enderror
                             </div>
+                            @endguest
                             <button
                                 class="btn btn-primary"
                                 wire:click="rsvp"

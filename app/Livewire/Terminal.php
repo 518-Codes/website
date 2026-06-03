@@ -88,7 +88,8 @@ class Terminal extends Component
             }
 
             try {
-                $meetup->rsvps()->create(['name' => $this->rsvpName, 'email' => $raw]);
+                $existingUser = User::where('email', $raw)->first();
+                $meetup->rsvps()->create(['name' => $this->rsvpName, 'email' => $raw, 'user_id' => $existingUser?->id]);
                 $this->history[] = ['type' => 'success', 'text' => '✓ You\'re going to "'.$meetup->title.'"! See you there.'];
             } catch (UniqueConstraintViolationException) {
                 $this->history[] = ['type' => 'error', 'text' => 'That email is already registered for this event.'];
@@ -389,10 +390,23 @@ class Terminal extends Component
         }
 
         $this->rsvpSlug = $slug;
-        $this->rsvpState = 'rsvp-name';
 
         $this->history[] = ['type' => 'output', 'text' => 'RSVPing to: '.$meetup->title];
         $this->history[] = ['type' => 'output', 'text' => $meetup->starts_at->format('D, M j, Y · g:i a').' · '.$meetup->location];
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            try {
+                $meetup->rsvps()->create(['name' => $user->name, 'email' => $user->email, 'user_id' => $user->id]);
+                $this->history[] = ['type' => 'success', 'text' => '✓ You\'re going to "'.$meetup->title.'"! See you there.'];
+            } catch (UniqueConstraintViolationException) {
+                $this->history[] = ['type' => 'error', 'text' => 'You\'re already registered for this event.'];
+            }
+
+            return;
+        }
+
+        $this->rsvpState = 'rsvp-name';
         $this->history[] = ['type' => 'prompt', 'text' => 'enter your name:'];
     }
 
