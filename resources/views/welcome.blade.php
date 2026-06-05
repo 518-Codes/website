@@ -218,7 +218,7 @@
                     @endif
                     · {{ $nextMeetup->location }}
                 </div>
-                <p class="featured-desc">{{ Str::limit($nextMeetup->description, 200) }}</p>
+                <p class="featured-desc">{{ Str::limit(strip_tags($nextMeetup->description), 200) }}</p>
                 @if($nextMeetup->tags->isNotEmpty())
                     <div class="event-chips" style="margin-bottom: 16px;">
                         @foreach($nextMeetup->tags as $tag)

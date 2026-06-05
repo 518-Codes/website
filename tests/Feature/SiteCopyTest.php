@@ -40,6 +40,17 @@ test('homepage featured block uses the typical-night label', function () {
         ->assertDontSee('how it runs');
 });
 
+test('homepage featured description strips html instead of showing raw tags', function () {
+    Meetup::factory()->upcoming()->create([
+        'description' => '<p>Distinctive teaser sentence.</p><p></p>',
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('Distinctive teaser sentence.')
+        ->assertDontSee('&lt;p&gt;', false);
+});
+
 test('nav links to discord instead of a dead subscribe button', function () {
     $this->get('/')
         ->assertOk()
