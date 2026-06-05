@@ -1,0 +1,168 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Flyers" name="Flyer D · Tearaway" subtitle="Standalone print-ready · tearaway tabs" -->
+<html lang="en" data-screen-label="Flyer D · Tearaway">
+<head>
+<meta charset="utf-8">
+<title>518.codes — Flyer D · Tearaway tabs</title>
+<link rel="icon" href="../../../assets/logos/favicon.svg">
+<link rel="stylesheet" href="../../../colors_and_type.css">
+<style>
+  @page { size: letter portrait; margin: 0; }
+  html, body { margin: 0; }
+  body {
+    background: #d4d2c4;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: 32px; min-height: 100vh; box-sizing: border-box;
+  }
+  .flyer {
+    width: 816px; height: 1056px;
+    position: relative; overflow: hidden;
+    font-family: var(--font-mono);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  }
+  .flyer-d {
+    background: var(--term-bg); color: var(--term-fg);
+    padding: 52px 48px 0; display: grid;
+    grid-template-rows: auto 1fr auto auto;
+  }
+  .flyer-d .top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 2px solid var(--term-fg); padding-bottom: 14px;
+  }
+  .flyer-d .top .wm { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; }
+  .flyer-d .top .wm .g { color: var(--phosphor); }
+  .flyer-d .top .meta { font-size: 12px; letter-spacing: 0.2em; color: var(--term-fg-mute); }
+  .flyer-d .body { padding-top: 40px; display: flex; flex-direction: column; }
+  .flyer-d .kicker {
+    font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--phosphor); font-weight: 600;
+  }
+  .flyer-d h1 {
+    font-size: 100px; font-weight: 800; letter-spacing: -0.04em;
+    line-height: 0.92; margin: 18px 0 0; max-width: 10ch;
+  }
+  .flyer-d h1 .g { color: var(--phosphor); }
+  .flyer-d .sub {
+    margin-top: 28px; font-size: 22px; color: var(--term-fg-dim);
+    max-width: 26ch; line-height: 1.4; font-weight: 500;
+  }
+  .flyer-d .scan-row {
+    margin-top: auto; padding-bottom: 20px;
+    display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: end;
+  }
+  .flyer-d .scan-row .meta .k {
+    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--phosphor); font-weight: 600;
+  }
+  .flyer-d .scan-row .meta .u {
+    font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px;
+  }
+  .flyer-d .scan-row .meta .u .g { color: var(--phosphor); }
+  .flyer-d .scissors {
+    position: relative; margin: 0 -48px;
+    border-top: 1px dashed var(--term-fg-mute); height: 0;
+  }
+  .flyer-d .scissors::before {
+    content: "✂"; position: absolute; left: 28px; top: -10px;
+    background: var(--term-bg); padding: 0 8px;
+    color: var(--term-fg-mute); font-size: 14px;
+  }
+  .flyer-d .tabs { margin: 0 -48px; display: grid; grid-template-columns: repeat(8, 1fr); }
+  .flyer-d .tab {
+    border-right: 1px dashed var(--term-fg-mute);
+    padding: 16px 8px 22px; text-align: center;
+    color: var(--phosphor); font-size: 11px; line-height: 1.4;
+    letter-spacing: 0.04em; background: var(--term-bg); min-height: 130px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  }
+  .flyer-d .tab:last-child { border-right: 0; }
+  .flyer-d .tab .url {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-weight: 700; font-size: 14px; color: var(--phosphor); letter-spacing: 0.02em;
+  }
+  .flyer-d .tab .label {
+    color: var(--term-fg-mute); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .qr-block {
+    width: 200px; height: 200px;
+    background: var(--phosphor); color: var(--term-bg);
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-weight: 800; font-size: 16px;
+    letter-spacing: 0.04em; position: relative;
+    box-shadow: inset 0 0 0 8px var(--term-bg), inset 0 0 0 10px var(--phosphor);
+  }
+  .qr-block::after {
+    content: "scan →"; position: absolute; bottom: 16px; right: 16px;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+  }
+  @media print {
+    body { background: none; padding: 0; }
+    .flyer { box-shadow: none; }
+  }
+
+  /* QR rendered at load (Discord invite). Block padding = quiet zone. */
+  .qr-block { box-shadow: none !important; padding: 16px; box-sizing: border-box; }
+  .qr-block svg { display: block; width: 100%; height: 100%; }
+  .qr-block::after { content: none !important; }
+</style>
+</head>
+<body>
+<div class="flyer flyer-d">
+  <div class="top">
+    <div class="wm"><span class="g">$</span>518<span class="g">.</span>codes</div>
+    <div class="meta">// post freely · capital region, ny</div>
+  </div>
+  <div class="body">
+    <div class="kicker">› a social club for software developers</div>
+    <h1>you write code.<br><span class="g">we have a room.</span></h1>
+    <div class="sub">Free meetups in Albany, Troy, Schenectady, and Saratoga.</div>
+    <div class="scan-row">
+      <div class="meta">
+        <div class="k">// scan to join</div>
+        <div class="u">518<span class="g">.</span>codes</div>
+      </div>
+      <div class="qr-block" data-qr-fg="#0B0F0B"></div>
+    </div>
+  </div>
+  <div class="scissors"></div>
+  <div class="tabs">
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+    <div class="tab"><span class="url">518.codes</span><div class="label">/ discord</div></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function(){
+  function build(fg){
+    var qr = qrcode(0, 'M');
+    qr.addData('https://discord.gg/U57hDJv5r');
+    qr.make();
+    var n = qr.getModuleCount(), cell = 10, size = n * cell;
+    var out = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet">'];
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) out.push('<rect x="' + (c*cell) + '" y="' + (r*cell) + '" width="' + cell + '" height="' + cell + '" fill="' + fg + '"/>');
+    }
+    out.push('</svg>');
+    return out.join('');
+  }
+  function render(){
+    if (typeof qrcode === 'undefined') return;
+    document.querySelectorAll('.qr-block').forEach(function(b){
+      var fg = b.getAttribute('data-qr-fg') || '#0B0F0B';
+      b.innerHTML = build(fg);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
+  else render();
+})();
+</script>
+</body>
+</html>
