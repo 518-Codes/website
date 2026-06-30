@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="{518} codes">
+  <defs>
+    <pattern id="crt" width="3" height="3" patternUnits="userSpaceOnUse">
+      <rect width="3" height="1" fill="#5EFC8D" opacity="0.12"></rect>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" fill="#0B0F0B"></rect>
+  <rect width="512" height="512" fill="url(#crt)"></rect>
+  <text x="256" y="266" text-anchor="middle" dominant-baseline="central" font-family="ui-monospace, &#39;SFMono-Regular&#39;, &#39;JetBrains Mono&#39;, Menlo, Consolas, &#39;Liberation Mono&#39;, monospace" font-weight="800" font-size="150" letter-spacing="-4"><tspan fill="#E6FFE6" dy="-10">{</tspan><tspan fill="#5EFC8D" dy="10">518</tspan><tspan fill="#E6FFE6" dy="-10">}</tspan></text>
+</svg>

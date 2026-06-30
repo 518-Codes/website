@@ -1,0 +1,14 @@
+{
+  "name": "518.codes — Upstate NY Developer Group",
+  "short_name": "518.codes",
+  "description": "Upstate NY Developer Group. Meetups, talks, and a community for developers in the 518.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0F0B",
+  "theme_color": "#5EFC8D",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}
