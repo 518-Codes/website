@@ -120,6 +120,7 @@ class EventDetail extends Component
         return view('livewire.event-detail')
             ->layout('layouts.app', [
                 'title' => $this->meetup->title.' · 518.codes',
+                'description' => Str::limit(strip_tags($this->meetup->description), 200),
             ]);
     }
 }
