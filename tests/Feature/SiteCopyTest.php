@@ -55,14 +55,14 @@ test('nav links to discord instead of a dead subscribe button', function () {
     $this->get('/')
         ->assertOk()
         ->assertSee('JOIN DISCORD')
-        ->assertSee('https://discord.gg/mHeDCkqZj', false)
+        ->assertSee(config('community.discord_url'), false)
         ->assertDontSee('SUBSCRIBE');
 });
 
 test('footer drops the dead feed links and keeps discord', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('https://discord.gg/mHeDCkqZj', false)
+        ->assertSee(config('community.discord_url'), false)
         ->assertDontSee('weekly digest')
         ->assertDontSee('rss feed')
         ->assertDontSee('ical link');
@@ -75,7 +75,7 @@ test('code of conduct page renders the rules and reporting route', function () {
         ->assertSee('Be respectful.')
         ->assertSee('No spam or self-promotion without asking.')
         ->assertSee('Listen to the organizers.')
-        ->assertSee('https://discord.gg/mHeDCkqZj', false);
+        ->assertSee(config('community.discord_url'), false);
 });
 
 test('footer code of conduct link points at the page', function () {
@@ -88,7 +88,7 @@ test('events index host CTAs point at the host page, not dead anchors', function
     $this->get(route('events.index'))
         ->assertOk()
         ->assertSee(route('host'), false)
-        ->assertSee('https://discord.gg/mHeDCkqZj', false)
+        ->assertSee(config('community.discord_url'), false)
         ->assertDontSee('One short email on Mondays');
 });
 

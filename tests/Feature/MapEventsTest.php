@@ -13,7 +13,7 @@ it('returns published upcoming events that have coordinates', function () {
 
     // Excluded: draft, past, and coord-less.
     Meetup::factory()->draft()->create(['starts_at' => now()->addDays(2)]);
-    Meetup::factory()->published()->create(['starts_at' => now()->subDay()]);
+    Meetup::factory()->published()->create(['starts_at' => now()->subDay(), 'ends_at' => now()->subDay()->addHours(3)]);
     Meetup::factory()->published()->create([
         'starts_at' => now()->addDay(),
         'latitude' => null,

@@ -57,8 +57,14 @@ class Meetup extends Model
         return $query->where('status', MeetupStatus::Published);
     }
 
+    /**
+     * Meetups that have not started yet or are currently in progress.
+     */
     public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->where('starts_at', '>=', now());
+        return $query->where(function (Builder $query): void {
+            $query->where('starts_at', '>=', now())
+                ->orWhere('ends_at', '>=', now());
+        });
     }
 }
