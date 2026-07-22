@@ -118,7 +118,7 @@
                     <div class="side-row"><span>cities</span><b>{{ $flat->pluck('location')->unique()->count() }}</b></div>
                     <div class="side-row">
                         <span>next event</span>
-                        <b>{{ $flat->first() ? $flat->first()->starts_at->diffForHumans() : '—' }}</b>
+                        <b>{{ $flat->first() ? ($flat->first()->isInProgress() ? 'happening now' : $flat->first()->starts_at->diffForHumans()) : '—' }}</b>
                     </div>
                 </div>
 

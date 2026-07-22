@@ -57,6 +57,11 @@ class Meetup extends Model
         return $query->where('status', MeetupStatus::Published);
     }
 
+    public function isInProgress(): bool
+    {
+        return $this->starts_at->isPast() && $this->ends_at?->isFuture() === true;
+    }
+
     /**
      * Meetups that have not started yet or are currently in progress.
      */

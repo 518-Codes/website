@@ -165,7 +165,7 @@
                 @if($nextMeetup)
                     <div class="row">
                         <span>next event</span>
-                        <b>{{ $nextMeetup->starts_at->diffForHumans() }}</b>
+                        <b>{{ $nextMeetup->isInProgress() ? 'happening now' : $nextMeetup->starts_at->diffForHumans() }}</b>
                     </div>
                     <div class="row">
                         <span>events coming up</span>
@@ -209,7 +209,7 @@
 
         <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; margin-bottom: 48px;">
             <div class="featured-block">
-                <div class="kicker">NEXT UP · {{ strtoupper($nextMeetup->starts_at->diffForHumans()) }}</div>
+                <div class="kicker">{{ $nextMeetup->isInProgress() ? 'HAPPENING NOW' : 'NEXT UP · '.strtoupper($nextMeetup->starts_at->diffForHumans()) }}</div>
                 <h3>{{ $nextMeetup->title }}</h3>
                 <div class="featured-meta">
                     {{ $nextMeetup->starts_at->format('D, M j') }} · {{ $nextMeetup->starts_at->format('g:i a') }}

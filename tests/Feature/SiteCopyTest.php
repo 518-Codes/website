@@ -51,6 +51,43 @@ test('homepage featured description strips html instead of showing raw tags', fu
         ->assertDontSee('&lt;p&gt;', false);
 });
 
+test('homepage featured kicker says happening now during an event', function () {
+    Meetup::factory()->published()->create([
+        'starts_at' => now()->subHours(7),
+        'ends_at' => now()->addHours(5),
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('HAPPENING NOW')
+        ->assertSee('happening now')
+        ->assertDontSee('NEXT UP')
+        ->assertDontSee('AGO');
+});
+
+test('events index sidebar says happening now during an event', function () {
+    Meetup::factory()->published()->create([
+        'starts_at' => now()->subHours(7),
+        'ends_at' => now()->addHours(5),
+    ]);
+
+    $this->get(route('events.index'))
+        ->assertOk()
+        ->assertSee('happening now')
+        ->assertDontSee('ago');
+});
+
+test('homepage featured kicker counts down to a future event', function () {
+    Meetup::factory()->published()->create([
+        'starts_at' => now()->addDays(3),
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('NEXT UP')
+        ->assertDontSee('HAPPENING NOW');
+});
+
 test('nav links to discord instead of a dead subscribe button', function () {
     $this->get('/')
         ->assertOk()
