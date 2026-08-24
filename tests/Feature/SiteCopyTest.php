@@ -136,3 +136,16 @@ test('terminal whois lists the four cities and not the old region', function () 
         ->assertSee('Albany · Troy · Schenectady · Saratoga Springs')
         ->assertDontSee('Hudson Valley');
 });
+
+test('upcoming event card decodes html entities in the description', function () {
+    Meetup::factory()->create([
+        'status' => \App\Enums\MeetupStatus::Published,
+        'description' => '<p>Have a project you&#039;re working on?</p>',
+        'starts_at' => now()->addDays(7),
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee("Have a project you're working on?")
+        ->assertDontSee('&amp;#039;', false);
+});
