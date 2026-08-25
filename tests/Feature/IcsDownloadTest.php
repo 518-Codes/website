@@ -21,3 +21,14 @@ it('returns 404 for a draft meetup', function () {
     get(route('events.ics', $meetup->slug))
         ->assertNotFound();
 });
+
+it('decodes html entities in the ics description', function () {
+    $meetup = Meetup::factory()->published()->create([
+        'description' => '<p>Have a project you&#039;re working on?</p>',
+    ]);
+
+    get(route('events.ics', $meetup->slug))
+        ->assertOk()
+        ->assertSee("DESCRIPTION:Have a project you're working on?", false)
+        ->assertDontSee('&#039;', false);
+});

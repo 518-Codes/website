@@ -20,7 +20,7 @@ class IcsController
         $end = ($meetup->ends_at ?? $meetup->starts_at->copy()->addHours(2))->utc()->format('Ymd\THis\Z');
         $summary = $this->escape($meetup->title);
         $location = $this->escape($meetup->location);
-        $description = $this->escape(strip_tags($meetup->description));
+        $description = $this->escape($meetup->plainDescription());
         $url = route('events.show', $meetup->slug);
 
         $ics = implode("\r\n", [

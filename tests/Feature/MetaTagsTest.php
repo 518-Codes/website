@@ -46,3 +46,17 @@ test('event detail page renders per-event open graph title and description', fun
     // HTML stripped from the description for the social card
     $response->assertSee('<meta property="og:description" content="Come learn Rust with us at the library."', false);
 });
+
+test('event detail open graph description decodes html entities', function () {
+    $meetup = Meetup::factory()->create([
+        'status' => MeetupStatus::Published,
+        'description' => '<p>Have a project you&#039;re working on?</p>',
+        'starts_at' => now()->addDays(7),
+    ]);
+
+    $response = $this->get('/events/'.$meetup->slug);
+
+    $response->assertOk();
+    $response->assertSee('<meta property="og:description" content="Have a project you&#039;re working on?"', false);
+    $response->assertDontSee('&amp;#039;', false);
+});

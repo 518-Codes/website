@@ -32,6 +32,15 @@ class Meetup extends Model
         ];
     }
 
+    /**
+     * The description as plain text: HTML tags stripped and entities decoded,
+     * suitable for meta tags, calendar files, and truncated previews.
+     */
+    public function plainDescription(): string
+    {
+        return trim(html_entity_decode(strip_tags((string) $this->description), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
