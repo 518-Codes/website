@@ -44,7 +44,7 @@ class MeetupAnnouncement extends Notification implements ShouldQueue
         }
 
         if ($this->meetup->what_to_expect) {
-            $message->line("**What to expect:** {$this->meetup->what_to_expect}");
+            $message->line("**What to expect:** {$this->meetup->plainWhatToExpect()}");
         }
 
         return $message

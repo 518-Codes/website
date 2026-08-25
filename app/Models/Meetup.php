@@ -38,7 +38,20 @@ class Meetup extends Model
      */
     public function plainDescription(): string
     {
-        return trim(html_entity_decode(strip_tags((string) $this->description), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        return $this->toPlainText($this->description);
+    }
+
+    /**
+     * The "what to expect" copy as plain text, for notification emails.
+     */
+    public function plainWhatToExpect(): string
+    {
+        return $this->toPlainText($this->what_to_expect);
+    }
+
+    private function toPlainText(?string $html): string
+    {
+        return trim(html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     public function tags(): BelongsToMany

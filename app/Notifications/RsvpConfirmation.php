@@ -45,7 +45,7 @@ class RsvpConfirmation extends Notification implements ShouldQueue
         }
 
         if ($meetup->what_to_expect) {
-            $message->line("**What to expect:** {$meetup->what_to_expect}");
+            $message->line("**What to expect:** {$meetup->plainWhatToExpect()}");
         }
 
         return $message
