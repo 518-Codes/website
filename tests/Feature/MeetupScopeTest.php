@@ -31,13 +31,15 @@ test('scopeUpcoming includes meetups currently in progress', function () {
     expect(Meetup::upcoming()->count())->toBe(1);
 });
 
-test('scopeUpcoming excludes started meetups with no end time', function () {
+test('scopeUpcoming still includes a started meetup with no end time inside the grace period', function () {
     Meetup::factory()->create([
         'starts_at' => now()->subHours(2),
         'ends_at' => null,
     ]);
 
-    expect(Meetup::upcoming()->count())->toBe(0);
+    // Without an explicit end time a meetup stays visible for
+    // Meetup::DEFAULT_DURATION_HOURS, so it does not vanish mid-session.
+    expect(Meetup::upcoming()->count())->toBe(1);
 });
 
 test('scopes can be chained', function () {
