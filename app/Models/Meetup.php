@@ -21,6 +21,11 @@ class Meetup extends Model
     /** @use HasFactory<MeetupFactory> */
     use HasFactory;
 
+    /**
+     * How long a meetup without an explicit end time is assumed to run.
+     */
+    public const DEFAULT_DURATION_HOURS = 3;
+
     protected function casts(): array
     {
         return [
@@ -79,19 +84,50 @@ class Meetup extends Model
         return $query->where('status', MeetupStatus::Published);
     }
 
-    public function isInProgress(): bool
-    {
-        return $this->starts_at->isPast() && $this->ends_at?->isFuture() === true;
-    }
-
     /**
-     * Meetups that have not started yet or are currently in progress.
+     * Meetups that have not finished yet, including ones currently in progress.
+     *
+     * A meetup without an explicit end time is considered active for
+     * self::DEFAULT_DURATION_HOURS after it starts.
      */
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query->where(function (Builder $query): void {
-            $query->where('starts_at', '>=', now())
-                ->orWhere('ends_at', '>=', now());
+            $query->where('ends_at', '>=', now())
+                ->orWhere(function (Builder $query): void {
+                    $query->whereNull('ends_at')
+                        ->where('starts_at', '>=', now()->subHours(self::DEFAULT_DURATION_HOURS));
+                });
         });
+    }
+
+    /**
+     * Meetups that have already finished, most recent first.
+     */
+    public function scopePast(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where('ends_at', '<', now())
+                ->orWhere(function (Builder $query): void {
+                    $query->whereNull('ends_at')
+                        ->where('starts_at', '<', now()->subHours(self::DEFAULT_DURATION_HOURS));
+                });
+        });
+    }
+
+    /**
+     * Whether the meetup is happening right now.
+     */
+    public function isInProgress(): bool
+    {
+        return $this->starts_at->isPast() && ! $this->hasEnded();
+    }
+
+    /**
+     * Whether the meetup has finished.
+     */
+    public function hasEnded(): bool
+    {
+        return ($this->ends_at ?? $this->starts_at->copy()->addHours(self::DEFAULT_DURATION_HOURS))->isPast();
     }
 }

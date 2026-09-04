@@ -44,8 +44,29 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // A handful of past/draft/cancelled events for realistic variety.
-        Meetup::factory(6)->create()->each(function (Meetup $meetup) use ($tags) {
+        // Past published events, so the archive on the events page has content.
+        Meetup::factory(8)->past()->create()->each(function (Meetup $meetup) use ($tags) {
+            $meetup->tags()->attach($tags->random(rand(1, 3))->pluck('id'));
+            $meetup->rsvps()->createMany(
+                RsvpFactory::new()->count(rand(3, 12))->make()->toArray()
+            );
+        });
+
+        // An event happening right now, to exercise the in-progress state.
+        $inProgress = Meetup::factory()->published()->create([
+            'starts_at' => now()->subHour(),
+            'ends_at' => now()->addHours(2),
+        ]);
+        $inProgress->tags()->attach($tags->random(rand(1, 3))->pluck('id'));
+        $inProgress->rsvps()->createMany(
+            RsvpFactory::new()->count(rand(3, 12))->make()->toArray()
+        );
+        foreach ($defaultSchedule as $item) {
+            MeetupScheduleItem::create(['meetup_id' => $inProgress->id] + $item);
+        }
+
+        // A handful of draft/cancelled events for realistic variety.
+        Meetup::factory(4)->create()->each(function (Meetup $meetup) use ($tags) {
             $meetup->tags()->attach($tags->random(rand(1, 3))->pluck('id'));
         });
     }

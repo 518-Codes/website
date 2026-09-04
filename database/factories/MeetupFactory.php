@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\MeetupStatus;
 use App\Models\Meetup;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -54,7 +55,7 @@ class MeetupFactory extends Factory
             'latitude' => $venue['lat'],
             'longitude' => $venue['lng'],
             'starts_at' => $startsAt,
-            'ends_at' => fake()->dateTimeBetween($startsAt, (clone $startsAt)->modify('+3 hours')),
+            'ends_at' => fn (array $attributes) => Carbon::parse($attributes['starts_at'])->addHours(2),
             'status' => fake()->randomElement(MeetupStatus::cases())->value,
         ];
     }
@@ -74,6 +75,18 @@ class MeetupFactory extends Factory
         return $this->state(['status' => MeetupStatus::Cancelled->value]);
     }
 
+    public function past(): static
+    {
+        return $this->state(function () {
+            $startsAt = fake()->dateTimeBetween('-6 months', '-1 day');
+
+            return [
+                'starts_at' => $startsAt,
+                'status' => MeetupStatus::Published->value,
+            ];
+        });
+    }
+
     public function upcoming(): static
     {
         return $this->state(function () {
@@ -81,7 +94,7 @@ class MeetupFactory extends Factory
 
             return [
                 'starts_at' => $startsAt,
-                'ends_at' => fake()->dateTimeBetween($startsAt, (clone $startsAt)->modify('+3 hours')),
+                'ends_at' => fn (array $attributes) => Carbon::parse($attributes['starts_at'])->addHours(2),
                 'status' => MeetupStatus::Published->value,
             ];
         });

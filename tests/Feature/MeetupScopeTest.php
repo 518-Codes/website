@@ -47,3 +47,56 @@ test('scopes can be chained', function () {
 
     expect(Meetup::published()->upcoming()->count())->toBe(1);
 });
+
+test('scopeUpcoming keeps an in-progress meetup that has not ended yet', function () {
+    Meetup::factory()->create([
+        'starts_at' => now()->subHour(),
+        'ends_at' => now()->addHour(),
+    ]);
+
+    expect(Meetup::upcoming()->count())->toBe(1);
+});
+
+test('scopeUpcoming drops a meetup once it has ended', function () {
+    Meetup::factory()->create([
+        'starts_at' => now()->subHours(4),
+        'ends_at' => now()->subHours(2),
+    ]);
+
+    expect(Meetup::upcoming()->count())->toBe(0);
+});
+
+test('scopeUpcoming keeps a recently started meetup with no end time', function () {
+    Meetup::factory()->create([
+        'starts_at' => now()->subHour(),
+        'ends_at' => null,
+    ]);
+
+    expect(Meetup::upcoming()->count())->toBe(1);
+});
+
+test('scopeUpcoming drops a meetup with no end time after the default duration', function () {
+    Meetup::factory()->create([
+        'starts_at' => now()->subHours(4),
+        'ends_at' => null,
+    ]);
+
+    expect(Meetup::upcoming()->count())->toBe(0);
+});
+
+test('scopePast returns only meetups that have finished', function () {
+    Meetup::factory()->create(['starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addHours(2)]);
+    Meetup::factory()->create(['starts_at' => now()->subHour(), 'ends_at' => now()->addHour()]);
+    Meetup::factory()->create(['starts_at' => now()->subDay(), 'ends_at' => now()->subDay()->addHours(2)]);
+    Meetup::factory()->create(['starts_at' => now()->subDay(), 'ends_at' => null]);
+
+    expect(Meetup::past()->count())->toBe(2);
+});
+
+test('upcoming and past scopes partition every meetup exactly once', function () {
+    Meetup::factory()->count(5)->create(['starts_at' => now()->addDays(2)]);
+    Meetup::factory()->count(3)->create(['starts_at' => now()->subDays(2)]);
+    Meetup::factory()->create(['starts_at' => now()->subHour(), 'ends_at' => now()->addHour()]);
+
+    expect(Meetup::upcoming()->count() + Meetup::past()->count())->toBe(Meetup::count());
+});

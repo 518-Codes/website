@@ -47,6 +47,16 @@
 
         .events-empty { padding: 80px 32px; border: 2px dashed var(--rule-2); text-align: center; color: var(--fg-mute); }
 
+        .past-divider {
+            margin: 72px 0 0; padding-top: 32px; border-top: 2px solid var(--fg);
+        }
+        .past-divider h2 { font-size: 24px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+        .past-divider h2 .pr { color: var(--accent); }
+        .past-divider .sub { color: var(--fg-mute); font-size: 13px; margin-top: 6px; }
+        .past-events { opacity: 0.62; }
+        .past-events:hover { opacity: 1; }
+        .past-events .event-date { color: var(--fg-mute); }
+
         @media (max-width: 900px) {
             .events-layout { grid-template-columns: 1fr; }
             .events-page { padding: 40px 20px 0; }
@@ -107,6 +117,41 @@
                         <div style="font-size: 13px;">Want to kick things off? <a href="{{ route('host') }}">host one yourself →</a></div>
                     </div>
                 @endforelse
+
+                @if ($pastMeetupsByMonth->isNotEmpty())
+                    <div class="past-divider">
+                        <h2><span class="pr">$</span>events --past</h2>
+                        <div class="sub">Already happened. Browse the archive to see what a night looks like.</div>
+                    </div>
+
+                    <div class="past-events">
+                        @foreach ($pastMeetupsByMonth as $month => $meetups)
+                            <div class="month-head">
+                                <h2>{{ strtoupper($month) }}</h2>
+                                <div class="month-rule"></div>
+                                <div class="month-count">{{ $meetups->count() }} event{{ $meetups->count() !== 1 ? 's' : '' }}</div>
+                            </div>
+                            @foreach ($meetups as $meetup)
+                                <a href="/events/{{ $meetup->slug }}" class="event-row">
+                                    <div class="event-date">
+                                        <div class="day">{{ $meetup->starts_at->format('d') }}</div>
+                                        <div class="month-dow">{{ strtoupper($meetup->starts_at->format('M')) }} · {{ strtoupper($meetup->starts_at->format('D')) }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="event-title-text">{{ $meetup->title }}</div>
+                                        <div class="event-chips">
+                                            @foreach ($meetup->tags->take(3) as $tag)
+                                                <span class="chip">{{ $tag->name }}</span>
+                                            @endforeach
+                                        </div>
+                                        <div class="event-sub">{{ $meetup->location }} · {{ $meetup->starts_at->format('g:i a') }}</div>
+                                    </div>
+                                    <div class="event-going">{{ $meetup->rsvps->count() }} went</div>
+                                </a>
+                            @endforeach
+                        @endforeach
+                    </div>
+                @endif
             </main>
 
             <aside>
