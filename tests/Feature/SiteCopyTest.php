@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MeetupStatus;
 use App\Livewire\Terminal;
 use App\Models\Meetup;
 
@@ -9,6 +10,11 @@ test('homepage about tells the real origin story', function () {
     $this->get('/')
         ->assertOk()
         ->assertSee('Startup Tech Valley')
+        ->assertSee('href="https://51eat.co"', false)
+        ->assertSee('href="https://premo.cloud"', false)
+        ->assertSee('href="https://matrangacode.works"', false)
+        ->assertSee('Ben Clouser')
+        ->assertSee('href="https://toradex.com"', false)
         ->assertDontSee('brewery')
         ->assertDontSee('Postgres meetup');
 });
@@ -139,7 +145,7 @@ test('terminal whois lists the four cities and not the old region', function () 
 
 test('upcoming event card decodes html entities in the description', function () {
     Meetup::factory()->create([
-        'status' => \App\Enums\MeetupStatus::Published,
+        'status' => MeetupStatus::Published,
         'description' => '<p>Have a project you&#039;re working on?</p>',
         'starts_at' => now()->addDays(7),
     ]);

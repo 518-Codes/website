@@ -107,6 +107,18 @@
         .stat-card .stat-n { font-family: var(--font-display); font-size: 56px; color: var(--accent); line-height: 1; }
         .stat-card .stat-l { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-dim); margin-top: 6px; }
 
+        /* Founders */
+        .founders { margin-top: 56px; }
+        .founders-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 14px; }
+        .founder-card { border: 2px solid var(--fg); padding: 18px; box-shadow: var(--shadow-2); }
+        .founder-avatar {
+            width: 56px; height: 56px; border: 2px solid var(--fg); background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 20px; color: var(--accent); margin-bottom: 14px;
+        }
+        .founder-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .founder-link { font-size: 13px; }
+
         /* City chips */
         .city-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
         .city-chip { padding: 3px 9px; border: 1.5px solid var(--fg-mute); font-size: 12px; color: var(--fg-dim); letter-spacing: 0.04em; }
@@ -131,6 +143,7 @@
             .featured-grid { grid-template-columns: 1fr; }
             .meta-card { display: none; }
             .about-grid { grid-template-columns: 1fr; gap: 32px; }
+            .founders-grid { grid-template-columns: 1fr 1fr; }
             .cta-block { grid-template-columns: 1fr; }
             .hero { padding: 40px 20px 48px; }
             .section { padding: 48px 20px; }
@@ -303,8 +316,7 @@
         <div class="about-grid">
             <div>
                 <p>
-                    Luigi Battaglioli (Laravel, 51Eat), Garret Premo (Premo Cloud), and Frank Matranga
-                    (Matranga Codeworks) met at a Startup Tech Valley event in the summer of 2026. Each of us
+                    518.codes started at a Startup Tech Valley event in the summer of 2026. Each of us
                     figured there weren't many developers up here, and most tech meetups we knew of were in
                     New York City. It turns out there are plenty of us. We just didn't have a place to meet.
                 </p>
@@ -344,6 +356,23 @@
                     <div class="stat-n">$0</div>
                     <div class="stat-l">cost to show up</div>
                 </div>
+            </div>
+        </div>
+        <div class="founders">
+            <div class="kicker kicker-mute">// founders</div>
+            <div class="founders-grid">
+                @foreach([
+                    ['name' => 'Luigi Battaglioli', 'site' => '51eat.co'],
+                    ['name' => 'Garret Premo', 'site' => 'premo.cloud'],
+                    ['name' => 'Frank Matranga', 'site' => 'matrangacode.works'],
+                    ['name' => 'Ben Clouser', 'site' => 'toradex.com'],
+                ] as $founder)
+                    <div class="founder-card">
+                        <div class="founder-avatar" aria-hidden="true">{{ collect(explode(' ', $founder['name']))->map(fn ($part) => $part[0])->implode('') }}</div>
+                        <div class="founder-name">{{ $founder['name'] }}</div>
+                        <a href="https://{{ $founder['site'] }}" class="founder-link" target="_blank" rel="noopener">{{ $founder['site'] }}</a>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
