@@ -13,6 +13,7 @@
         "laravel/octane": "^2.17",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.34",
+        "resend/resend-php": "^1.18",
         "symfony/http-client": "^8.1"
     },
     "require-dev": {
