@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Prepares an Amp orb (Debian 12) to build, test, and run this Laravel app.
+# Idempotent: safe to rerun on a warm snapshot.
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+step() {
+    local label="$1"
+    shift
+    local start=$SECONDS
+    echo "==> ${label}"
+    "$@"
+    echo "<== ${label} ($((SECONDS - start))s)"
+}
+
+php_packages=(
+    php8.4-cli php8.4-bcmath php8.4-curl php8.4-gd php8.4-intl php8.4-mbstring
+    php8.4-sqlite3 php8.4-xml php8.4-zip
+)
+
+install_php() {
+    local missing=()
+    for package in "${php_packages[@]}"; do
+        dpkg -s "$package" >/dev/null 2>&1 || missing+=("$package")
+    done
+    if [ "${#missing[@]}" -eq 0 ]; then
+        echo "PHP packages already installed"
+        return
+    fi
+
+    # Debian 12 only ships PHP 8.2; the project needs ^8.3, so use the Sury repository.
+    if [ ! -f /etc/apt/sources.list.d/sury-php.list ]; then
+        sudo curl -fsSLo /usr/share/keyrings/sury-php.gpg https://packages.sury.org/php/apt.gpg
+        echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ bookworm main" \
+            | sudo tee /etc/apt/sources.list.d/sury-php.list >/dev/null
+    fi
+    sudo apt-get update -qq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
+}
+
+install_composer() {
+    if command -v composer >/dev/null 2>&1; then
+        echo "Composer already installed"
+        return
+    fi
+    local installer
+    installer="$(mktemp)"
+    curl -fsSLo "$installer" https://getcomposer.org/installer
+    sudo php "$installer" --quiet --install-dir=/usr/local/bin --filename=composer
+    rm -f "$installer"
+}
+
+prepare_env() {
+    if [ ! -f .env ]; then
+        cp -- .env.example .env
+    fi
+    if ! grep -q '^APP_KEY=.\+' .env; then
+        php artisan key:generate --no-interaction
+    fi
+}
+
+prepare_database() {
+    local fresh=0
+    if [ ! -f database/database.sqlite ]; then
+        touch database/database.sqlite
+        fresh=1
+    fi
+    php artisan migrate --force --no-interaction
+    # The seeder creates a fixed user email, so only seed a new database.
+    if [ "$fresh" -eq 1 ]; then
+        php artisan db:seed --force --no-interaction
+    fi
+}
+
+step "Install PHP 8.4" install_php
+step "Install Composer" install_composer
+step "Composer install" composer install --no-interaction --no-progress
+step "npm ci" npm ci --no-audit --no-fund
+step "Prepare .env" prepare_env
+step "Migrate and seed SQLite" prepare_database
+step "Build frontend assets" npm run build
