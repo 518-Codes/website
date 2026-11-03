@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '518.codes — meetups for people who write code in the 518')
+@section('title', '518.codes — developers in New York\'s Capital Region')
 
 @section('styles')
         /* Scanlines */
@@ -144,15 +144,15 @@
     <div class="scanlines" aria-hidden="true"></div>
     <div class="hero-inner" style="position: relative;">
         <div>
-            <div class="kicker">capital region · est 2026 · volunteer-run</div>
+            <div class="kicker">capital region · est 2026</div>
             <h1 class="hero-display" style="margin-top: 24px;">
-                <span class="l1">SHOW UP.</span>
-                <span class="l3">SAY HI.</span>
-                <span class="l2">WRITE CODE.</span>
+                <span class="l1">YOU'RE NOT</span>
+                <span class="l3">THE ONLY DEV</span>
+                <span class="l2">IN THE 518.</span>
             </h1>
             <p class="hero-tag">
-                Meetups, demo nights, and study groups for people who write code in the 518.
-                Free, volunteer-run, neighborhood-scale. First-timers always welcome.
+                A weekly happy hour and a monthly build night for developers in the Capital Region.
+                Free, and open to anyone who's into code.
             </p>
             <div class="hero-cta-row">
                 <a href="#events" class="btn btn-primary">SEE WHAT'S COMING UP →</a>
@@ -174,9 +174,8 @@
                 @else
                     <div class="row"><span>next event</span><b>TBA</b></div>
                 @endif
-                <div class="row"><span>cities</span><b>{{ count(config('cities')) }}</b></div>
-                <div class="row"><span>people coming</span><b>{{ $stats['rsvps_total'] }}</b></div>
-                <div class="row"><span>cost to show up</span><b>$0</b></div>
+                <div class="row"><span>happy hour</span><b>wednesdays</b></div>
+                <div class="row"><span>build night</span><b>monthly</b></div>
             </div>
         </div>
     </div>
@@ -235,12 +234,11 @@
             </div>
 
             <div class="schedule-card">
-                <div class="kicker kicker-mute">// a typical night</div>
+                <div class="kicker kicker-mute">// the regulars</div>
                 <ul>
-                    <li><span class="time">6:30</span> &nbsp;doors open</li>
-                    <li><span class="time">7:00</span> &nbsp;talks &amp; demos</li>
-                    <li><span class="time">8:00</span> &nbsp;open discussion</li>
-                    <li><span class="time">9:00</span> &nbsp;hallway track</li>
+                    <li><span class="time">weekly</span> &nbsp;happy hour, wednesdays</li>
+                    <li><span class="time">monthly</span> &nbsp;build night: pizza, laptops</li>
+                    <li><span class="time">soon</span> &nbsp;talks</li>
                 </ul>
                 <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--hairline);">
                     <div class="kicker kicker-mute" style="margin-bottom: 8px;">// where</div>
@@ -297,24 +295,28 @@
     <div class="section">
         <div class="section-head">
             <h2><span style="color: var(--accent);">›</span> about</h2>
-            <div class="meta-label">est. 2026 · 0 sponsors</div>
+            <div class="meta-label">est. summer 2026</div>
         </div>
         <div class="about-grid">
             <div>
                 <p>
-                    518.codes was founded by three software engineers who met at Startup Tech Valley in May 2026.
-                    We hit it off immediately — trading business ideas, comparing go-to stacks, talking through where
-                    we each wanted to go in software — and kept landing on the same idea: the 518 should have a real
-                    community for the people who write code here. So we started one.
+                    Luigi Battaglioli (Laravel, 51Eat), Garret Premo (Premo Cloud), and Frank Matranga
+                    (Matranga Codeworks) met at a Startup Tech Valley event in the summer of 2026. Each of us
+                    figured there weren't many developers up here, and most tech meetups we knew of were in
+                    New York City. It turns out there are plenty of us. We just didn't have a place to meet.
                 </p>
                 <p>
-                    We are not a conference. We don't have sponsors, swag, or a stage. We're a group of people who
-                    like to hang out, write code, and support each other and the community around us.
-                    Anyone can host, and everyone is welcome — junior, senior, between jobs, between languages.
-                    Wherever you are in your career, you have a place at our table.
+                    So now there's a happy hour every Wednesday, often at Ilium on Fulton Street in Troy, and a
+                    build night once a month. Build nights are pizza and side projects, though mostly we end up
+                    talking and riffing on ideas. Talks are coming.
                 </p>
                 <p>
-                    <span style="color: var(--accent);">›</span> Show up. Say hi. Bring a friend.
+                    Our members so far include people building apps with AI, remote engineers who miss having
+                    coworkers to talk to, beginners, and at least one Linux distro maintainer. If you're into
+                    code, you'll fit in.
+                </p>
+                <p>
+                    <span style="color: var(--accent);">›</span> Come by on a Wednesday. Bring a friend.
                 </p>
                 <div class="city-chips">
                     @foreach(config('cities') as $city)
@@ -352,10 +354,10 @@
         <div class="cta-block">
             <div>
                 <div class="kicker" style="margin-bottom: 8px;">host an event</div>
-                <h3>Got a topic, a venue, or just a Tuesday?</h3>
+                <h3>Want to run something?</h3>
                 <p>
-                    Submit a one-paragraph proposal. We help with logistics, copy, and getting the word out.
-                    You pick the date, the room, and what you want to talk about. We bring the people.
+                    If you want to give a talk or have a space for a build night, send us a short pitch.
+                    We'll work out the details with you and get it on the calendar.
                 </p>
             </div>
             <a href="{{ route('host') }}" class="btn btn-primary">SUBMIT AN EVENT →</a>

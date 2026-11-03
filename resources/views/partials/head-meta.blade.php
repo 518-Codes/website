@@ -1,6 +1,6 @@
 @php
     $metaTitle = $title ?? '518.codes — Upstate NY Developer Group';
-    $metaDescription = $description ?? 'Upstate NY Developer Group. Meetups, talks, and a community for developers in the 518.';
+    $metaDescription = $description ?? 'A developer community in New York\'s Capital Region. Weekly happy hours and monthly build nights around the 518.';
 @endphp
 
 {{-- Primary --}}

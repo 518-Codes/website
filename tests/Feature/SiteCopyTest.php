@@ -31,13 +31,13 @@ test('homepage applies the honesty relabels', function () {
         ->assertDontSee('events hosted');
 });
 
-test('homepage featured block uses the typical-night label', function () {
+test('homepage featured block lists the real recurring events', function () {
     Meetup::factory()->upcoming()->create();
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('a typical night')
-        ->assertDontSee('how it runs');
+        ->assertSee('the regulars')
+        ->assertDontSee('a typical night');
 });
 
 test('homepage featured description strips html instead of showing raw tags', function () {

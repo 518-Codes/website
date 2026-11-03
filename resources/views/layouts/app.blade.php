@@ -381,7 +381,7 @@
             <span style="font-weight: 800; font-size: 20px; letter-spacing: -0.02em;">
                 <span style="color: var(--accent); margin-right: 4px;">$</span>518<span style="color: var(--accent);">.</span>codes
             </span>
-            <p class="footer-desc">A community of software developers in New York's Capital Region. Free, volunteer-run, and always open to first-timers.</p>
+            <p class="footer-desc">Developers in New York's Capital Region. Happy hour on Wednesdays, build night once a month.</p>
         </div>
         <div>
             <div class="footer-col-title">community</div>

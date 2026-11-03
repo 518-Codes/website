@@ -327,11 +327,10 @@ class Terminal extends Component
         $lines = [
             ['type' => 'accent', 'text' => '518.codes'],
             ['type' => 'output', 'text' => ''],
-            ['type' => 'output', 'text' => 'A community of software developers in New York\'s Capital Region.'],
-            ['type' => 'output', 'text' => 'Free, volunteer-run, and always open to first-timers.'],
+            ['type' => 'output', 'text' => 'Developers in New York\'s Capital Region.'],
             ['type' => 'output', 'text' => ''],
-            ['type' => 'output', 'text' => 'Meetups, demo nights, and study groups for people who'],
-            ['type' => 'output', 'text' => 'write code in the 518. Show up. Say hi. Write code.'],
+            ['type' => 'output', 'text' => 'Happy hour every Wednesday, build night once a month.'],
+            ['type' => 'output', 'text' => 'Free, and open to anyone who\'s into code.'],
             ['type' => 'output', 'text' => ''],
             ['type' => 'dim', 'text' => implode(' · ', config('cities'))],
         ];
