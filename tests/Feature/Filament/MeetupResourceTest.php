@@ -95,3 +95,41 @@ it('can delete a meetup', function () {
 
     expect(Meetup::find($meetup->id))->toBeNull();
 });
+
+it('duplicates a meetup to next week as a draft', function () {
+    $tag = Tag::factory()->create();
+    // Crosses the March 14, 2027 DST change: the copy must keep the 6pm wall-clock time.
+    $meetup = Meetup::factory()->published()->create([
+        'title' => 'Weekly Happy Hour',
+        'slug' => 'weekly-happy-hour',
+        'location' => 'The Olde English, Albany',
+        'starts_at' => '2027-03-11 18:00:00',
+        'ends_at' => '2027-03-11 21:00:00',
+    ]);
+    $meetup->tags()->attach($tag);
+    $meetup->scheduleItems()->create(['time' => '6:00 PM', 'title' => 'Doors', 'order' => 1]);
+    $meetup->images()->create(['path' => 'meetup-images/bar.jpg', 'alt' => 'The bar', 'order' => 0]);
+    $meetup->rsvps()->create(['name' => 'Alice', 'email' => 'alice@example.com']);
+
+    livewire(ListMeetups::class)
+        ->callAction(TestAction::make('replicate')->table($meetup))
+        ->assertHasNoErrors();
+
+    $copy = Meetup::where('slug', 'weekly-happy-hour-2027-03-18')->firstOrFail();
+
+    expect($copy->status)->toBe(MeetupStatus::Draft)
+        ->and($copy->location)->toBe('The Olde English, Albany')
+        ->and($copy->starts_at->format('Y-m-d H:i'))->toBe('2027-03-18 18:00')
+        ->and($copy->ends_at->format('Y-m-d H:i'))->toBe('2027-03-18 21:00')
+        ->and($copy->tags->pluck('id')->all())->toBe([$tag->id])
+        ->and($copy->scheduleItems->pluck('title')->all())->toBe(['Doors'])
+        ->and($copy->images->pluck('path')->all())->toBe(['meetup-images/bar.jpg'])
+        ->and($copy->rsvps()->count())->toBe(0)
+        ->and($meetup->fresh()->status)->toBe(MeetupStatus::Published);
+
+    // Duplicating the same meetup again gets a distinct slug instead of failing.
+    livewire(ListMeetups::class)
+        ->callAction(TestAction::make('replicate')->table($meetup));
+
+    expect(Meetup::where('slug', 'weekly-happy-hour-2027-03-18-2')->exists())->toBeTrue();
+});
