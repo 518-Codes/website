@@ -73,6 +73,8 @@
         .featured-footer { display: flex; gap: 12px; align-items: center; }
         .featured-cap { font-size: 12px; color: var(--fg-mute); }
 
+        .featured-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; margin-bottom: 48px; }
+
         .schedule-card {
             border: 2px solid var(--fg); padding: 20px; background: var(--surface);
         }
@@ -81,7 +83,7 @@
 
         /* Event rows */
         .event-row {
-            display: grid; grid-template-columns: 96px 1fr auto;
+            display: grid; grid-template-columns: 96px minmax(0, 1fr) auto;
             gap: 20px; align-items: center;
             padding: 22px 0; border-bottom: 1px solid var(--hairline);
             color: inherit; text-decoration: none;
@@ -93,7 +95,7 @@
         .event-date .month-dow { font-size: 14px; letter-spacing: 0.1em; }
         .event-title { font-weight: 700; font-size: 17px; }
         .event-sub { font-size: 12px; color: var(--fg-mute); letter-spacing: 0.04em; margin-top: 4px; }
-        .event-chips { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+        .event-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
         .event-going { color: var(--accent); font-size: 13px; white-space: nowrap; }
 
         /* About */
@@ -126,6 +128,7 @@
         /* Responsive */
         @media (max-width: 900px) {
             .hero-inner { grid-template-columns: 1fr; }
+            .featured-grid { grid-template-columns: 1fr; }
             .meta-card { display: none; }
             .about-grid { grid-template-columns: 1fr; gap: 32px; }
             .cta-block { grid-template-columns: 1fr; }
@@ -133,7 +136,7 @@
             .section { padding: 48px 20px; }
         }
         @media (max-width: 640px) {
-            .event-row { grid-template-columns: 72px 1fr; }
+            .event-row { grid-template-columns: 72px minmax(0, 1fr); }
             .event-going { display: none; }
         }
 @endsection
@@ -206,7 +209,7 @@
             <div class="meta-label">{{ now()->format('Y-m-d · H:i T') }}</div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; margin-bottom: 48px;">
+        <div class="featured-grid">
             <div class="featured-block">
                 <div class="kicker">{{ $nextMeetup->isInProgress() ? 'HAPPENING NOW' : 'NEXT UP · '.strtoupper($nextMeetup->starts_at->diffForHumans()) }}</div>
                 <h3>{{ $nextMeetup->title }}</h3>
