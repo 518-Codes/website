@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\MeetupStatus;
+use App\Exceptions\SkillIssueException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\EventResource;
 use App\Models\Meetup;
@@ -27,6 +28,10 @@ class EventRsvpController extends Controller
 
         if ($event->hasEnded()) {
             throw ValidationException::withMessages(['event' => 'This event has already ended.']);
+        }
+
+        if ($event->starts_at->isFuture()) {
+            throw new SkillIssueException("Cannot RSVP to [{$event->slug}]: the event has not started yet.");
         }
 
         $user = $request->user();
