@@ -12,6 +12,7 @@ use App\Livewire\Members\MemberProfile;
 use App\Livewire\Members\MembersIndex;
 use App\Models\Meetup;
 use App\Models\Rsvp;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ Route::get('/members/{username}', MemberProfile::class)->name('members.show');
 Route::get('/members/{username}/edit', EditProfile::class)->name('members.edit')->middleware('auth');
 
 Route::get('/api/map-events', MapEventsController::class);
+
+Scramble::registerUiRoute('api/docs')->name('api.docs');
+Scramble::registerJsonSpecificationRoute('api/docs.json')->name('api.docs.json');
 
 Route::get('/map', fn () => view('region-map'))->name('map');
 

@@ -50,6 +50,13 @@ class EditProfile extends Component
     #[Validate('nullable|image|max:2048')]
     public $avatar;
 
+    public string $newTokenName = '';
+
+    /**
+     * A freshly created API token, shown once so the member can copy it.
+     */
+    public ?string $plainTextToken = null;
+
     public bool $prefRsvpConfirmation = true;
 
     public bool $prefAnnouncements = true;
@@ -248,9 +255,24 @@ class EditProfile extends Component
         $this->redirect("/members/{$this->member->username}", navigate: true);
     }
 
+    public function createApiToken(): void
+    {
+        $this->validate(['newTokenName' => 'required|string|max:255']);
+
+        $this->plainTextToken = $this->member->createToken($this->newTokenName)->plainTextToken;
+        $this->newTokenName = '';
+    }
+
+    public function revokeApiToken(int $tokenId): void
+    {
+        $this->member->tokens()->whereKey($tokenId)->delete();
+    }
+
     public function render()
     {
-        return view('livewire.members.edit-profile')
+        return view('livewire.members.edit-profile', [
+            'apiTokens' => $this->member->tokens()->latest()->get(),
+        ])
             ->layout('layouts.app', ['title' => 'edit profile · 518.codes']);
     }
 }

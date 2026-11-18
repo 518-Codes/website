@@ -310,6 +310,40 @@
                     <span wire:loading wire:target="save">SAVING...</span>
                 </button>
 
+                {{-- API Tokens --}}
+                <div class="edit-section-title">api tokens</div>
+                <div style="font-size:11px; color:var(--fg-mute); margin-top:-12px;">
+                    Personal access tokens for scripts and bots. Send one as <code>Authorization: Bearer &lt;token&gt;</code> to the 518.codes API.
+                </div>
+
+                @if ($plainTextToken)
+                    <div class="edit-field" style="border:2px solid var(--accent); padding:12px;">
+                        <span class="edit-label" style="color:var(--accent);">new token · copy it now, it won't be shown again</span>
+                        <input class="edit-input" type="text" readonly value="{{ $plainTextToken }}" onclick="this.select()">
+                    </div>
+                @endif
+
+                <form wire:submit="createApiToken" class="edit-field">
+                    <label class="edit-label" for="newTokenName">token name</label>
+                    <div style="display:flex; gap:10px;">
+                        <input id="newTokenName" class="edit-input" style="flex:1;" type="text" wire:model="newTokenName" placeholder="discord-bot">
+                        <button type="submit" class="btn btn-secondary">CREATE →</button>
+                    </div>
+                    @error('newTokenName') <div class="edit-error">{{ $message }}</div> @enderror
+                </form>
+
+                @foreach ($apiTokens as $token)
+                    <div class="entry-card" wire:key="token-{{ $token->id }}" style="flex-direction:row; align-items:center; justify-content:space-between; padding:10px 14px;">
+                        <div>
+                            <div style="font-size:13px; color:var(--fg);">{{ $token->name }}</div>
+                            <div style="font-size:11px; color:var(--fg-mute);">
+                                created {{ $token->created_at->diffForHumans() }} · {{ $token->last_used_at ? 'last used '.$token->last_used_at->diffForHumans() : 'never used' }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-ghost" style="color:var(--amber);" wire:click="revokeApiToken({{ $token->id }})" wire:confirm="Revoke {{ $token->name }}? Anything using it will stop working.">REVOKE</button>
+                    </div>
+                @endforeach
+
             </div>
         </div>
     </div>
